@@ -1,0 +1,6 @@
+src
+.vscode
+.editorconfig
+.gitignore
+testResults.log
+coverage
