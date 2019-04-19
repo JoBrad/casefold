@@ -1,0 +1,4 @@
+{
+  "mocha.files.glob": "bin/**/*.spec.js",
+  "mocha.parallelTests": 20
+}
