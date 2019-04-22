@@ -185,7 +185,7 @@ export const Utils = {
    * @param {any} value
    * @returns {string|undefined}
    */
-  keyForValue: cfKeyForValue
+  keyForValue: cfKeyForValue,
 
   /**
    * Returns an object is obj is already an object or if
@@ -279,7 +279,7 @@ caseFold.has = cfHas
  *
  * @param {string[]} stringArray
  * @param {string} searchValue
- * @param {boolean} [trim=false] Set to true to trim values before comparison
+ * @param {boolean} [trim=true] Set to true to trim values before comparison
  * @returns {string|undefined} The value from the array, or undefined, if it is not found
  */
 caseFold.find = find
@@ -302,7 +302,7 @@ caseFold.indexOf = cfIndexOf
  * keyMap({'foo': {'bar': 'bar'}, 'fooBAR  ': 'bar'}) => ['foo', 'foobar']
  *
  * @param {object} obj
- * @param {boolean} trim Defaults to true
+ * @param {boolean} [trim=true] Defaults to true
  * @returns {string[]}
  */
 caseFold.keys = cfKeys
@@ -327,7 +327,7 @@ caseFold.keys = cfKeys
  * keyMap(obj, true, true) => {'foo': {'bar': {'bar': 'bAr'}}, 'foobar': 'fooBAR'}
  *
  * @param {object} obj
- * @param {boolean} trim Defaults to true
+ * @param {boolean} [trim=true] Defaults to true
  * @param {boolean} recurse Defaults to false
  * @returns {object}
  */
@@ -776,7 +776,7 @@ function cfTrim(val: any): string {
  * Set trim to false if you do not want it trimmed.
  *
  * @param {boolean|number|null|Symbol|string} val
- * @param {boolean} trim
+ * @param {boolean} [trim=true]
  * @returns {any}
  */
 function _cfKey(val: boolean|number|null|string, trim: boolean = true): string {
@@ -817,7 +817,7 @@ function cfKeysRecursive(obj: Object, trim: boolean): Object {
  * If trim is false, then the keys will not be trimmed
  *
  * @param {object} obj
- * @param {boolean} trim Defaults to true
+ * @param {boolean} [trim=true] Defaults to true
  * @returns {string[]}
  */
 function cfKeys(obj: Object, trim: boolean): string[] {
@@ -924,7 +924,7 @@ function cfEndsWith(stringValue: string, searchValue: string, trim?: boolean): b
  * @param {boolean} [trim=true] Trim values when searching
  * @returns {number} -1 if not found, or the index of the found value
  */
-function cfIndexOf(stringOrStrArray: string | string[], searchValue: string, trim: boolean = false): number {
+function cfIndexOf(stringOrStrArray: string | string[], searchValue: string, trim: boolean = true): number {
   if (isString(searchValue) === false || searchValue.trim() === '') {
     return -1
   }
@@ -945,10 +945,10 @@ function cfIndexOf(stringOrStrArray: string | string[], searchValue: string, tri
  *
  * @param {string[]} stringArray
  * @param {string} searchValue
- * @param {boolean} [trim=false] Set to true to trim values before comparison
+ * @param {boolean} [trim=true] Set to true to trim values before comparison
  * @returns {string|undefined} The value from the array, or undefined, if it is not found
  */
-function find(stringArray: string | string[], searchValue: string, trim: boolean = false): string | undefined {
+function find(stringArray: string | string[], searchValue: string, trim: boolean = true): string | undefined {
   let returnValue
   if (isString(searchValue) === false || searchValue.trim() === '') {
     return returnValue
@@ -983,11 +983,11 @@ function find(stringArray: string | string[], searchValue: string, trim: boolean
  * keyMap(obj, true, true) => {'foo': {'bar': {'bar': 'bAr'}}, 'foobar': 'fooBAR'}
  *
  * @param {object} obj
- * @param {boolean} trim Defaults to true
+ * @param {boolean} [trim=true] Defaults to true
  * @param {boolean} recurse Defaults to false
  * @returns {object}
  */
-function cfKeyMap(obj: any, trim: boolean = true, recurse: boolean = false): Object {
+function cfKeyMap(obj: any, trim: boolean = true, recurse: boolean = true): Object {
   let doTrim = (typeof trim === 'boolean')
     ? trim
     : true

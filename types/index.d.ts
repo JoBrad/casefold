@@ -182,7 +182,6 @@ export declare namespace caseFold {
     var startsWith: typeof cfStartsWith;
     var get: typeof cfGet;
     var getKey: typeof cfGetKey;
-    var keyForValue: typeof cfKeyForValue;
     var has: typeof cfHas;
     var find: typeof find;
     var indexOf: typeof cfIndexOf;
@@ -339,7 +338,7 @@ declare function cfTrim(val: any): string;
  * If trim is false, then the keys will not be trimmed
  *
  * @param {object} obj
- * @param {boolean} trim Defaults to true
+ * @param {boolean} [trim=true] Defaults to true
  * @returns {string[]}
  */
 declare function cfKeys(obj: Object, trim: boolean): string[];
@@ -394,7 +393,7 @@ declare function cfIndexOf(stringOrStrArray: string | string[], searchValue: str
  *
  * @param {string[]} stringArray
  * @param {string} searchValue
- * @param {boolean} [trim=false] Set to true to trim values before comparison
+ * @param {boolean} [trim=true] Set to true to trim values before comparison
  * @returns {string|undefined} The value from the array, or undefined, if it is not found
  */
 declare function find(stringArray: string | string[], searchValue: string, trim?: boolean): string | undefined;
@@ -418,7 +417,7 @@ declare function find(stringArray: string | string[], searchValue: string, trim?
  * keyMap(obj, true, true) => {'foo': {'bar': {'bar': 'bAr'}}, 'foobar': 'fooBAR'}
  *
  * @param {object} obj
- * @param {boolean} trim Defaults to true
+ * @param {boolean} [trim=true] Defaults to true
  * @param {boolean} recurse Defaults to false
  * @returns {object}
  */
