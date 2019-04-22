@@ -987,7 +987,7 @@ function cfFind(stringArray: string | string[], searchValue: string, trim: boole
  * @param {boolean} recurse Defaults to false
  * @returns {object}
  */
-function cfKeyMap(obj: any, trim: boolean = true, recurse: boolean = true): Object {
+function cfKeyMap(obj: any, trim: boolean = true, recurse: boolean = false): Object {
   let doTrim = (typeof trim === 'boolean')
     ? trim
     : true
