@@ -9,10 +9,10 @@ The idea for this package came from Python's [str.casefold](https://docs.python.
 
 # Future enhancements
 On the current to-do list:
-* Convert string comparison to localecompare
-* Extend functions that access object properties to take full advantage of lodash's `get` and `set` options, especially with regards to Array access.
-* The functions are not all consistent (e.g. some return undefined, some don't), due to the original requirements of the project that this was made for. The goal is to make all functions consistent.
-* Allow individual functions to be imported without importing the entire library.
+* [x] Convert string comparison to localecompare
+* [ ] The functions are not all consistent (e.g. some return undefined, some don't), due to the original requirements of the project that this was made for. The goal is to make all functions consistent.
+* [ ] Extend functions that access object properties to take full advantage of lodash's `get` and `set` options, especially with regards to Array access.
+* [ ] Allow individual functions to be imported without importing the entire library.
 
 # API
 The casefold package exposes 2 top-level objects:
