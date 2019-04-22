@@ -20,6 +20,18 @@ function getTestCases(testInput: any, argsAndResult: any[]): any[][] {
   return returnArry
 }
 
+function getCodePointsArray(str: string): any[] {
+  return [...str].map(c => {
+    return c.codePointAt(0)
+  })
+}
+
+/**
+ * Returns true if val is null, undefined, a number, a string, or a boolean
+ *
+ * @param {any} val
+ * @returns {boolean}
+ */
 function isPrimitive(val: any): boolean {
   if (typeof val === 'undefined' || null === val) {
     return true
@@ -28,6 +40,12 @@ function isPrimitive(val: any): boolean {
   return primitiveValues.indexOf(typeof val) !== -1
 }
 
+/**
+ * Converts val to a friendly string
+ *
+ * @param {any} val
+ * @returns {string}
+ */
 function stringify(val: any): string {
   if (typeof val === 'string') {
     return '"' + val + '"'
@@ -53,7 +71,7 @@ function stringify(val: any): string {
     }
     return fName
   } else {
-    if (isPrimitive(val) === false && val && val.constructor && typeof val.constructor.name === 'string') {
+    if (isPrimitive(val) === false && val && val.constructor && typeof val.constructor.name === 'string' && val.constructor.name !== 'Object') {
       return val.constructor.name + ' ' + JSON.stringify(val)
     }
     return JSON.stringify(val)
@@ -71,43 +89,44 @@ describe('casefold module => ', () => {
       it('Should be a function', () => {
         expect(caseFold).to.be.a('function')
       })
+      let testFunc = caseFold
 
-      let all_lower = 'foo'
-      let all_upper = 'FOO'
-      let mixed = 'Foo'
-      let mixed_with_spaces = ' Foo  '
-      let lower_with_spaces = ' foo  '
-      it('Should lowercase an uppercase string', function () {
-        expect(caseFold(all_upper)).to.equal(all_lower)
+      let testCases: Array<[string|[string, boolean], any]> = [
+        ['foo', 'foo'],
+        ['FOO', 'foo'],
+        ['  FOO', 'foo'],
+        [['  FOO', false], '  foo'],
+        ['  FOO  ', 'foo'],
+        ['  FOO  ', 'foo'],
+        ['\u0130', String.fromCodePoint(...getCodePointsArray('\u0130'.toLocaleLowerCase()))],
+        ['\u0049', String.fromCodePoint(...getCodePointsArray('\u0049'.toLocaleLowerCase()))],
+        ['\u00DF', '\u00DF'],
+      ]
+
+      testCases.map((testCase) => {
+        let [testValue, expectedValue] = testCase
+        let actualResult: string
+        if (Array.isArray(testValue)) {
+          actualResult = testFunc(testValue[0], testValue[1])
+        } else {
+          actualResult = testFunc(testValue)
+        }
+        it(`Should return ${stringify(expectedValue)} when passed ${stringify(testValue)}`, () => {
+          expect(actualResult).to.equal(expectedValue)
+        })
       })
 
-      it('Should lowercase a mixed-case string', function () {
-        expect(caseFold(mixed)).to.equal(all_lower)
-      })
-
-      it('Should trim and lowercase a string', function () {
-        expect(caseFold(mixed_with_spaces, true)).to.equal(all_lower)
-      })
-
-      it('Should leave spaces if not requested to trim', function () {
-        expect(caseFold(mixed_with_spaces)).to.equal(lower_with_spaces)
-      })
-
-      it('Should return an empty string when passed a non-string value', function () {
-        expect(caseFold({})).to.equal('')
-      })
     })
 
     describe('#trim', () => {
       let testFunc = caseFold.trim
-      let testCases: [any, any][] = [
-        [' FOO ', 'foo'],
-        ['foo', 'foo'],
-        ['bar', 'bar'],
-        ['FOObar', 'foobar'],
-        ['FOOBAR.bar', 'foobar.bar'],
-        [{}, ''],
-        [1, '']
+      let testCases = [
+        ['FOO  ', 'foo'],
+        ['FOO  ', 'foo'],
+        ['  FOO', 'foo'],
+        ['\u0130', String.fromCodePoint(...getCodePointsArray('\u0130'.toLocaleLowerCase()))],
+        ['\u0049', String.fromCodePoint(...getCodePointsArray('\u0049'.toLocaleLowerCase()))],
+        ['\u00DF', '\u00DF'],
       ]
 
       testCases.map(([testValue, expectedValue]) => {
@@ -210,8 +229,9 @@ describe('casefold module => ', () => {
     describe('#has', () => {
       let testFunc = caseFold.has
       let testCases: [[any, any], any][] = [
-        [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, ['foo', 'bar']], true],
-        [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, ['fOo', 'BAR']], true],
+        [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, ['bar', 'foo']], true],
+        [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, ['bar', 'FOO']], true],
+        [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, 'fOo'], true],
         [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, ['fooBAR']], true],
         [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, ['a', 'b']], false],
         [[[], ['a', 'b']], false],
@@ -232,9 +252,10 @@ describe('casefold module => ', () => {
     describe('#get', () => {
       let testFunc = caseFold.get
       let testCases: any[][] = []
-      testCases = testCases.concat(getTestCases(
-        {'foo': 'bar', 'foobar': 'bar'},
-        [
+      testCases = testCases.concat(getTestCases({
+        'foo': 'bar',
+        'foobar': 'bar'
+      }, [
           [['BAR', 'FOO'], 'bar'],
           ['foo', 'bar'],
           ['bar', undefined],
@@ -244,10 +265,16 @@ describe('casefold module => ', () => {
           [1, undefined]
         ]
       ))
-      testCases = testCases.concat(getTestCases(
-        {'foo': {'bar': 'bar'}, 'foobar': 'bar'},
-        [
+      testCases = testCases.concat(getTestCases( {
+        'foo': {
+          'bar': 'bar'
+        },
+        'foobar': 'bar',
+        null: 'any'
+      }, [
           ['foo', {'bar': 'bar'}],
+          ['null', 'any'],
+          [null, 'any'],
           [['FOObar.bar', 'FOO.BAR'], 'bar'],
           ['bar', undefined],
           ['FOObar', 'bar'],
@@ -267,22 +294,100 @@ describe('casefold module => ', () => {
 
     describe('#set', () => {
       let testFunc = caseFold.set
-      it('Does not yet have tests!')
+      let testCases: any[] = [
+        [[{}, 'foo', {'foo': 'bar'}], {'foo': {'foo': 'bar'}}],
+        [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, 'FOO.bar', 1], {'foo': {'bar': 1}, 'foobar': 'bar'}],
+        [[{'foo': {'Bar': 'Original bar'}}, 'FOO.bAR.foo', 1], {'foo': {'Bar': {'foo': 1}}}],
+        [[undefined, 'foo', {'foo': 'bar'}], {'foo': {'foo': 'bar'}}],
+        [['a', 'foo', {'foo': 'bar'}], {'foo': {'foo': 'bar'}}],
+        [[{'fOo': {'baR': 'original bar'}}, 'foo', {'foo': 'bar'}], {'fOo': {'foo': 'bar'}}],
+        [[{'fOo': {'baR': 'original bar'}}, 'Foo.bar.fooBar', {'foo': 'bar'}], {'fOo': {'baR': {'fooBar': {'foo': 'bar'}}}}],
+      ];
+      testCases.map(([vars, expectedValue]) => {
+        let [obj, path, value] = vars
+        it(`Should return ${stringify(expectedValue)} when passed (${stringify(obj)}, ${stringify(path)}, ${stringify(value)})`, () => {
+          expect(testFunc(obj, path, value)).to.deep.equal(expectedValue)
+        })
+      })
     })
 
     describe('#getKey', () => {
       let testFunc = caseFold.getKey
-      it('Does not yet have tests!')
+      let testCases: any[][] = []
+      testCases = testCases.concat(getTestCases({
+        'foo': 'bar',
+        'foobar': 'bar'
+      }, [
+          [['BAR', 'FOO'], 'foo'],
+          ['foo', 'foo'],
+          ['bar', undefined],
+          ['FOObar', 'foobar'],
+          ['FOOBAR.bar', undefined],
+          [{}, undefined],
+          [1, undefined]
+        ]
+      ))
+      testCases = testCases.concat(getTestCases( {
+        'foo': {
+          'bar': 'bar'
+        },
+        'foobar': 'bar',
+        null: 'any'
+      }, [
+          ['foo', 'foo'],
+          [null, 'null'],
+          ['null', 'null'],
+          [['FOObar.bar', 'FOO.BAR'], 'foo.bar'],
+          ['bar', undefined],
+          ['FOObar', 'foobar'],
+          ['FOOBAR.bar', undefined],
+          [{}, undefined],
+          [1, undefined]
+        ]
+      ))
+
+      testCases.map(([vars, expectedValue]) => {
+        let [testObject, searchValue] = vars
+        it(`Should return ${stringify(expectedValue)} when passed (${stringify(testObject)}, ${stringify(searchValue)})`, () => {
+          expect(testFunc(testObject, searchValue)).to.deep.equal(expectedValue)
+        })
+      })
     })
 
     describe('#keys', () => {
       let testFunc = caseFold.keys
-      it('Does not yet have tests!')
+      let testCases: any[][] = [
+        [ [{ 'foo': 'bar', 'foobar': 'bar' }, true], [ 'foo', 'foobar'] ],
+        [ [{ ' fOo': { 'baR ': 'bar' }, 'fOObar': 'bar', null: 'any' }, true], ['foo', 'foobar', 'null'] ]
+      ]
+
+      testCases.map(([vars, expectedValue]) => {
+        let [testObject, searchValue] = vars
+        it(`Should return ${stringify(expectedValue)} when passed (${stringify(testObject)}, ${stringify(searchValue)})`, () => {
+          expect(testFunc(testObject, searchValue)).to.deep.equal(expectedValue)
+        })
+      })
     })
 
     describe('#keyMap', () => {
       let testFunc = caseFold.keyMap
-      it('Does not yet have tests!')
+      let testCases: any[] = [
+        [[{'foo ': {'bar': 'bar'}, 'fooBAR': 'bar'}, false, false], {'foo ': 'foo ', 'foobar': 'fooBAR'}],
+        [[{'foo': {'bar': 'bar'}, 'fooBAR': 'bar'}, true, false], {'foo': 'foo', 'foobar': 'fooBAR'}],
+        [[{'foo': {'bar': 'bar'}, 'fooBAR': 'bar'}], {'foo': 'foo', 'foobar': 'fooBAR'}],
+        [[{'fOO': {'bar': 'bar'}, 'fooBAR': 'bar'}, true, false], {'foo': 'fOO', 'foobar': 'fooBAR'}],
+        [[{'foo': {'BAR': {'bAr': 'foo'}}, 'fooBAR': 'bar'}, true, false], {'foo': 'foo', 'foobar': 'fooBAR'}],
+        [[{'foo': {'bar': 'bar'}, 'fooBAR': 'bar'}, true, true], {'foo': {'bar': 'bar'}, 'foobar': 'fooBAR'}],
+        [[{'fOO': {'bar': 'bar'}, 'fooBAR': 'bar'}, true, true], {'foo': {'bar': 'bar'}, 'foobar': 'fooBAR'}],
+        [[{'foo': {'BAR': {'bAr': 'foo'}}, 'fooBAR': 'bar'}, true, true], {'foo': {'bar': {'bar': 'bAr'}}, 'foobar': 'fooBAR'}],
+      ]
+
+      testCases.map(([vars, expectedValue]) => {
+        let [testObject, doTrim, doRecurse] = vars
+        it(`Should return ${stringify(expectedValue)} when passed (${stringify(testObject)}, ${stringify(doTrim)}, ${stringify(doRecurse)})`, () => {
+          expect(testFunc(testObject, doTrim, doRecurse)).to.deep.equal(expectedValue)
+        })
+      })
     })
 
     describe('#transform', () => {

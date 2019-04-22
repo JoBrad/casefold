@@ -1,6 +1,5 @@
 const log = require('debug')('casefold')
 import _ from 'lodash'
-import { isArray } from 'util';
 
 /**
  * casefold
@@ -25,7 +24,7 @@ interface Object {
  */
 export interface TransformOptions {
   [key: string]: any
-  exact_match: boolean
+  // exact_match: boolean
   keep_unmatched: boolean
   context?: Object
 }
@@ -34,40 +33,385 @@ export interface MappingObject {
   [key: string]: string | string[] | MappingObject | Function
 }
 
+export interface BoolOptions {
+  [key: string]: any[]|undefined
+  'true'?: any[],
+  'false'?: any[]
+}
+interface BoolConversionOptions {
+  [key: string]: any[]
+  'true': any[],
+  'false': any[]
+}
+
+type validKeyTypes = boolean | number | null | string
+type validKeyTypeArray = Array<validKeyTypes>
+
 export const Utils = {
+  /**
+   * Uses `Object.prototype.toString.call` to return an object's
+   * type as a lower-cased string
+   *
+   * @param {any} obj
+   * @returns {string}
+   */
   toType: toType,
+
+  /**
+   * Returns true if obj is null or undefined
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
   isNil: isNil,
+
+  /**
+   * Returns false if obj is not null or undefined
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
   notNil: notNil,
+
+  /**
+   * Returns true if obj is a number
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
   isNumber: isNumber,
+
+  /**
+   * Returns true if obj is a string
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
   isString: isString,
+
+  /**
+   * Returns true if obj is a boolean value
+   * @param {any} obj
+   * @returns {boolean}
+   */
   isBool: isBool,
+
+  /**
+   * Returns true if the prototype of obj is Object
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
   isObject: isObject,
+
+  /**
+   * Returns true if obj is an Array
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
+  isArray: isArray,
+
+  /**
+   * Returns true if the prototype of obj is Function
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
   isFunction: isFunction,
+
+  /**
+   * Returns true if the prototype of obj is Error
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
   isError: isError,
+
+  /**
+   * Returns true if the provided object is an Array
+   * that contains at least one element, and whose elements
+   * are all strings
+   *
+   * @param {Array<any>} obj
+   * @returns {boolean}
+   */
   isStringArray: isStringArray,
+
+  /**
+   * Attempts to convert obj to a boolean value, if it is not already one.
+   * Note that if obj is not a boolean, it is coerced to a string and casefolded
+   * before comparison to true/false values.
+   * Default true/false values are:
+   *  true: 'true', 'yes', 'y', '1', 1
+   *  false: 'false', 'no', 'n', '0', 0
+   *
+   * @param {any} obj
+   * @param {boolean} defaultValue    Value to return if obj is one of
+   *                                  the defined values. A non-boolean value
+   *                                  will revert to undefined.
+   * @param {BoolOptions} boolOptions An optional object with true and/or false
+   *                                  keys. The value should be an array of acceptable
+   *                                  values for true or false, to be used instead of
+   *                                  the default values. String values should be lower-cased.
+   * @returns {boolean|undefined}
+   */
   toBool: toBool,
+
+  /**
+   * Uses lodash to deeply clone obj
+   *
+   * @param {any} obj
+   * @returns {any}
+   */
   cloneObj: cloneObj,
+
+  /**
+   * Returns true if the prototype of obj
+   * is Object, and the object has own keys
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
   hasKeys: hasKeys,
-  keyForValue: cfKeyForValue,
+
+  /**
+   * Returns key from obj where key's value == the provided
+   * value. If value and key's value are strings, then they
+   * are matched without regard for casing.
+   * If the value cannot be matched, undefined is returned
+   *
+   * @param {object} obj
+   * @param {any} value
+   * @returns {string|undefined}
+   */
+  keyForValue: cfKeyForValue
+
+  /**
+   * Returns an object is obj is already an object or if
+   * it can be parsed to one.
+   * Otherwise returns undefined
+   *
+   * @param {any} obj
+   * @returns {object|undefined}
+   */
   safeJSONParse: safeJSONParse,
 }
 
+/**
+ * Lower-cases stringValue using toLocaleLowerCase.
+ * The value will also be trimmed unless trim is set to false.
+ * Falls back to lodash's toString function if the value is not a string
+ *
+ * @param {any} stringValue
+ * @param {boolean} [trim=true] Set to false if you do not want the value to be trimmed
+ * @returns {string}
+ */
 export function caseFold(stringValue: string|any, trim?: boolean) {
-  if (trim !== true) trim = false
   return cf(stringValue, trim)
 }
+
+/**
+ * Like String.endsWith, but doesn't case about casing
+ *
+ * @param {string} string
+ * @param {string} searchValue
+ * @param {boolean} [trim=true] Trim values when searching
+ * @returns {boolean}
+ */
 caseFold.endsWith = cfEndsWith
+
+/**
+ * Like String.startsWith, but doesn't case about casing
+ *
+ * @param {string} string
+ * @param {string} searchValue
+ * @param {boolean} [trim=true] Trim values when searching
+ * @returns {boolean}
+ */
 caseFold.startsWith = cfStartsWith
+
+/**
+ * Looks for path's value in obj, regardless of casing differences
+ * path can be a string (including a dotted-string), or an array of
+ * paths to look for.
+ *
+ * @example
+ * get({'foo': 'bar', 'foobar': 'bar'}, ['BAR', 'FOO']) => 'bar'
+ *
+ * @example
+ * get({'foo': {'bar': 'bar'}, 'foobar': 'bar'}, ['FOObar.bar', 'FOO.BAR']) => 'bar'
+ *
+ * @param {object} objs
+ * @param {string|string[]} path
+ * @param {any} defaultValue
+ */
 caseFold.get = cfGet
+
+/**
+ * Returns the matching key in obj, or undefined
+ *
+ * @example
+ * getKey({'FOO': 'bar'}, 'foo') => 'FOO'
+ *
+ * @example
+ * getKey({'FOO': 'bar'}, 'bar') => undefined
+ *
+ * @param {object} obj
+ * @param {string|string[]} path
+ */
 caseFold.getKey = cfGetKey
+
+/**
+ * Returns true if key (or any of key's elements, if it is an Array)
+ * is in obj.
+ * Returns false if the value is not found, if obj is not an object,
+ * or if key is not a string or string array
+ *
+ * @param {object} obj
+ * @param {string|string[]} key
+ * @returns {boolean}
+ */
 caseFold.has = cfHas
+
+/**
+ * Like Array.find, but doesn't care about casing
+ *
+ * @param {string[]} stringArray
+ * @param {string} searchValue
+ * @param {boolean} [trim=false] Set to true to trim values before comparison
+ * @returns {string|undefined} The value from the array, or undefined, if it is not found
+ */
 caseFold.find = find
+
+/**
+ * Like Array.indexOf or String.indexOf, but doesn't care about casing
+ *
+ * @param {string|string[]} stringOrStrArray
+ * @param {string} searchValue
+ * @param {boolean} [trim=true] Trim values when searching
+ * @returns {number} -1 if not found, or the index of the found value
+ */
 caseFold.indexOf = cfIndexOf
+
+/**
+ * Like Object.keys, except that each key is processed by caseFold.
+ * If trim is false, then the keys will not be trimmed
+ *
+ * @example
+ * keyMap({'foo': {'bar': 'bar'}, 'fooBAR  ': 'bar'}) => ['foo', 'foobar']
+ *
+ * @param {object} obj
+ * @param {boolean} trim Defaults to true
+ * @returns {string[]}
+ */
 caseFold.keys = cfKeys
+
+/**
+ * Returns an object mapped from _.keys(obj). Each key in the
+ * returned object will be casefolded, and that key's value
+ * will be the original form of objKey.
+ * If trim is false, then keys will not be trimmed
+ * If recurse is true, then every child object will be traversed
+ *
+ * @example
+ * let obj = {'foo': {'bar': 'bar'}, 'fooBAR': 'bar'}
+ * keyMap(obj, true, false) => {'foo': 'foo', 'foobar': 'fooBAR'}
+ *
+ * @example
+ * let obj = {'foo ': {'bar': 'bar'}, 'fooBAR': 'bar'}
+ * keyMap(obj, false, false) => {'foo ': 'foo ', 'foobar': 'fooBAR'}
+ *
+ * @example
+ * let obj = {'foo': {'BAR': {'bAr': 'foo'}}, 'fooBAR': 'bar'}
+ * keyMap(obj, true, true) => {'foo': {'bar': {'bar': 'bAr'}}, 'foobar': 'fooBAR'}
+ *
+ * @param {object} obj
+ * @param {boolean} trim Defaults to true
+ * @param {boolean} recurse Defaults to false
+ * @returns {object}
+ */
 caseFold.keyMap = cfKeyMap
+
+/**
+ * Returns true if string1 and string2 are the same, regardless of casing.
+ *
+ * @param {string} string1
+ * @param {string} string2
+ * @returns {boolean}
+ */
 caseFold.equals = cfEquals
+
+/**
+ * Sets path to value, for obj. Existing paths will not be duplicated,
+ * even if they differ in casing from the path provided.
+ *
+ * **Note**: _Every_ path before the last one will be set to an object
+ * instance, if it is not already an object.
+ *
+ * @example
+ * set({'foo': {'bar': 'bar'}, 'foobar': 'bar'}, 'FOO.bar', 1) => {'foo': {'bar': 1}, 'foobar': 'bar'}
+ *
+ * @example
+ * set({'foo': {'Bar': 'Original bar'}}, 'FOO.bAR.foo', 1) => {'foo': {'Bar': {'foo': 1}}}
+ *
+ * @param {object} obj
+ * @param {string|string[]} path
+ * @param {any} value
+ * @returns {object}
+ */
 caseFold.set = cfSet
+
+/**
+ * Casefolds val, and trims it. Useful when being passed more than one parameter, but you
+ * only want to process the first one
+ *
+ * @param {any} val
+ * @returns {string}
+ */
 caseFold.trim = cfTrim
+
+/**
+ * Transforms sourceObject using mappingObject.
+ * If sourceObject or mappingObject are not objects, or if none
+ * of the mappingObject keys are found in sourceObject, undefined is returned
+ *
+ * @example
+ * import { caseFold } from 'casefold';
+ * let sourceObject = {
+ *   'foo': 'bar',
+ *   'Bar': {
+ *     'FOO': [1, 2],
+ *     'HAR': {
+ *       'FOOBAR': 'foo'
+ *     }
+ *   }
+ * }
+ * let mappingObject = {
+ *   'foo': ['foo', 'bar'],
+ *   'bar': 'bar',
+ *   'foobar': ['foobar', 'bar.har.foobar'],
+ *   'har': 'har',
+ *   'barCount': (msg) => {
+ *     let arrayValue = caseFold.get(msg, 'bar.foo');
+ *     if (isArray(arrayValue)) {
+ *       return arrayValue.length;
+ *     }
+ *   }
+ * };
+ * let mappedObject = caseFold.transform(sourceObject, mappingObject)
+ * // mappedObject = {
+ * //   'foo': 'bar',   // key 'foo' was found first, and returned
+ * //   'bar': 'Bar',   // casing doesn't matter, so 'Bar's value was returned
+ * //   'foobar': 'foo' // Returned the dotted property value
+ * //   'barCount': 2
+ * // }
+ *
+ * @param {object|Object|undefined} sourceObject
+ * @param {MappingObject} mappingObject
+ * @param {TransformOptions} options
+ * @returns {object|Object|undefined}
+ */
 caseFold.transform = transformObject
 
 /**
@@ -90,6 +434,16 @@ function getTransformOptions(options: TransformOptions | undefined): TransformOp
 }
 
 /**
+ * Returns Object.prototype.toString.call(obj)
+ *
+ * @param {any} obj
+ * @returns {string}
+ */
+function protoToString(obj: any): string {
+  return Object.prototype.toString.call(obj)
+}
+
+/**
  * Uses `Object.prototype.toString.call` to return an object's
  * type as a lower-cased string
  *
@@ -98,9 +452,20 @@ function getTransformOptions(options: TransformOptions | undefined): TransformOp
  */
 function toType(obj: any): string {
   // The || is because TypeScript complains that the result could be undefined
-  let typeString = (Object.prototype.toString.call(obj) || '').toLowerCase().match(/\s([a-z|A-Z]+)/)
+  let typeString = protoToString(obj).toLowerCase().match(/\s([a-z|A-Z]+)/)
   if (typeString) return typeString[1]
   return 'object'
+}
+
+/**
+ * Returns true if the provided value is a valid object key
+ *
+ * @param {any} obj
+ * @returns {string}
+ */
+function isKeyType(obj: any): obj is validKeyTypes {
+  let objType = toType(obj)
+  return ['boolean', 'number', 'null', 'symbol', 'string'].indexOf(objType) > -1
 }
 
 /**
@@ -109,7 +474,7 @@ function toType(obj: any): string {
  * @param {any} obj
  * @returns {boolean}
  */
-function isNil(obj: any): boolean {
+function isNil(obj: any): obj is null|undefined {
   return (typeof obj === 'undefined') || (null === obj)
 }
 
@@ -119,7 +484,7 @@ function isNil(obj: any): boolean {
  * @param {any} obj
  * @returns {boolean}
  */
-function notNil(obj: any): boolean {
+function notNil(obj: any): obj is NonNullable<any>  {
   return isNil(obj) === false
 }
 
@@ -129,7 +494,7 @@ function notNil(obj: any): boolean {
  * @param {any} obj
  * @returns {boolean}
  */
-function isNumber(obj: any): boolean {
+function isNumber(obj: any): obj is number {
   return toType(obj) === 'number'
 }
 
@@ -139,7 +504,7 @@ function isNumber(obj: any): boolean {
  * @param {any} obj
  * @returns {boolean}
  */
-function isString(obj: any): boolean {
+function isString(obj: any): obj is string {
   return toType(obj) === 'string'
 }
 
@@ -148,7 +513,7 @@ function isString(obj: any): boolean {
  * @param {any} obj
  * @returns {boolean}
  */
-function isBool(obj: any): boolean {
+function isBool(obj: any): obj is boolean {
   return typeof obj === 'boolean'
 }
 
@@ -158,8 +523,18 @@ function isBool(obj: any): boolean {
  * @param {any} obj
  * @returns {boolean}
  */
-function isObject(obj: any): boolean {
+function isObject(obj: any): obj is object {
   return toType(obj) === 'object'
+}
+
+/**
+ * Returns true if obj is an Array
+ *
+ * @param {any} obj
+ * @returns {boolean}
+ */
+function isArray(obj: any): obj is any[] {
+  return Array.isArray(obj)
 }
 
 /**
@@ -168,7 +543,7 @@ function isObject(obj: any): boolean {
  * @param {any} obj
  * @returns {boolean}
  */
-function isFunction(obj: any): boolean {
+function isFunction(obj: any): obj is Function {
   return toType(obj) === 'function'
 }
 
@@ -178,7 +553,7 @@ function isFunction(obj: any): boolean {
  * @param {any} obj
  * @returns {boolean}
  */
-function isError(obj: any): boolean {
+function isError(obj: any): obj is Error {
   return obj instanceof Error
 }
 
@@ -187,14 +562,14 @@ function isError(obj: any): boolean {
  * that contains at least one element, and whose elements
  * are all strings
  *
- * @param {Array<any>} ary
+ * @param {Array<any>} obj
  * @returns {boolean}
  */
-function isStringArray(ary: any | any[]): boolean {
-  if (Array.isArray(ary)) {
-    if (ary.length === 0) return false
-    let nonStrings = ary.find(function (val) {
-      return toType(val) !== 'string'
+function isStringArray(obj: any | any[]): obj is string[] {
+  if (isArray(obj)) {
+    if (obj.length === 0) return false
+    let nonStrings = obj.find(function (val) {
+      return isString(val) === false
     })
     return isNil(nonStrings)
   }
@@ -202,39 +577,93 @@ function isStringArray(ary: any | any[]): boolean {
 }
 
 /**
- * Attempts to convert obj to a boolean value.
- * If obj is a boolean it is returned.
- * True values are 'true', 'yes', 'y', '1', 1
- * False values are 'false', 'no', 'n', '0', 0
- * Case does not matter.
+ * Returns true if obj is an array whose elements are all
+ * valid key values
+ *
+ * @param {any} ary
+ * @returns {boolean}
+ */
+function isKeyArray(obj: any): obj is validKeyTypeArray {
+  let returnValue = false
+  if (isArray(obj)) {
+    let badValue = obj.find(e => {
+      return isKeyType(e) === false
+    })
+    returnValue = typeof badValue === 'undefined'
+  }
+  return returnValue
+}
+
+/**
+ * Returns an array. If the provided value is an array of
+ * valid path values, it is returned. If it is a string, it will be split,
+ * if it contains any dotted values, or it will simply be inserted
+ * into the returned array
+ */
+function toKeyArray(pathVals: any): string[] {
+  let returnValue: any[] = []
+  if (isString(pathVals)) {
+    returnValue = pathVals.trim().split('.')
+  } else if (isKeyArray(pathVals)) {
+    returnValue = pathVals.map(k => {
+      return '' + k
+    })
+  } else if (isKeyType(pathVals)) {
+    returnValue = ['' + pathVals]
+  }
+  return returnValue
+}
+
+/**
+ * Attempts to convert obj to a boolean value, if it is not already one.
+ * Note that if obj is not a boolean, it is coerced to a string and casefolded
+ * before comparison to true/false values.
+ * Default true/false values are:
+ *  true: 'true', 'yes', 'y', '1', 1
+ *  false: 'false', 'no', 'n', '0', 0
  *
  * @param {any} obj
- * @param {boolean} defaultValue  Value to return if obj is one of
- *                                the defined values. A non-boolean value
- *                                will revert to undefined.
+ * @param {boolean} defaultValue    Value to return if obj is one of
+ *                                  the defined values. A non-boolean value
+ *                                  will revert to undefined.
+ * @param {BoolOptions} boolOptions An optional object with true and/or false
+ *                                  keys. The value should be an array of acceptable
+ *                                  values for true or false, to be used instead of
+ *                                  the default values. String values should be lower-cased.
  * @returns {boolean|undefined}
  */
-function toBool(obj: any, defaultValue?: boolean): boolean | undefined {
-  if (toType(obj) === 'boolean') return obj
-  const trueValues = ['true', 'yes', 'y', '1']
-  const falseValues = ['false', 'no', 'n', '0']
-  let fallbackValue
-  let returnValue = obj
+function toBool(obj: any, defaultValue: boolean|undefined=undefined, boolOptions?: BoolOptions): boolean | undefined {
+  if (toType(obj) === 'boolean') {
+    return obj
+  }
+  let boolValues: BoolConversionOptions = {
+    'true': ['true', 'yes', 'y', '1'],
+    'false': ['false', 'no', 'n', '0']
+  }
+  if (typeof boolOptions === 'object') {
+    Object.keys(boolValues).map(k => {
+      let boolVals = boolOptions[k];
+      if (isArray(boolVals)) {
+        boolValues[k] = boolVals
+      }
+    })
+  }
+  let castValue = '' + obj,
+    returnValue: boolean|undefined
 
-  if (toType(defaultValue) === 'boolean') {
-    fallbackValue = defaultValue
+  if (isBool(defaultValue)) {
+    returnValue = defaultValue
   }
 
-  if (toType(returnValue) === 'number') {
-    returnValue = _.toString(returnValue)
+  castValue = cf(_.toString(obj), true)
+
+  if (boolValues['true'].indexOf(castValue) > -1) {
+    returnValue = true
+  } else if (boolValues['false'].indexOf(castValue) > -1) {
+    returnValue = false
   }
 
-  if (toType(returnValue) === 'string') {
-    returnValue = returnValue.trim().toLowerCase()
-    if (trueValues.indexOf(returnValue) > -1) return true
-    if (falseValues.indexOf(returnValue) > -1) return false
-  }
-  return fallbackValue
+  return returnValue
 }
 
 /**
@@ -265,7 +694,7 @@ function hasKeys(obj: any): boolean {
  */
 function cfKeyForValue(obj: Object, value: any): string | undefined {
   let returnValue
-  if (isObject(obj)) {
+  if (hasKeys(obj)) {
     Object.keys(obj).find((k) => {
       let v = obj[k]
       let doesMatch = (typeof value === 'string' && typeof v === 'string')
@@ -281,29 +710,13 @@ function cfKeyForValue(obj: Object, value: any): string | undefined {
 }
 
 /**
- * Returns a copy of obj
+ * Uses lodash to deeply clone obj
  *
  * @param {any} obj
  * @returns {any}
  */
 function cloneObj(obj: any): any {
-  if (isNil(obj)) return obj
-  if (toType(obj) === 'string') return '' + obj
-  if (toType(obj) === 'number') return obj * 1
-  if (toType(obj) === 'boolean') return (obj === true)
-  try {
-    return JSON.parse(JSON.stringify(obj))
-  } catch (_er) {
-    try {
-      return _.cloneDeep(obj)
-    } catch (err) {
-      let logMsgs = ['Could not clone the provided object!']
-      logMsgs.push(`Object type: ${toType(obj)}`)
-      logMsgs.push(`Error details: ${err}`)
-      log(logMsgs.join('\n'))
-      return obj
-    }
-  }
+  return _.cloneDeep(obj)
 }
 
 /**
@@ -327,108 +740,113 @@ function safeJSONParse(obj: any): Object | undefined {
 }
 
 /**
- * Lower-cases stringValue. If trim is true (default is false)
- * then the value will also be trimmed. Returns an empty string
- * if the provided value is not a string.
+ * Lower-cases stringValue using toLocaleLowerCase.
+ * The value will also be trimmed unless trim is set to false.
+ * Falls back to lodash's toString function if the value is not a string
  *
- * @param {string} stringValue
- * @param {boolean} [trim=False] Set to true to trim the value
+ * @param {any} stringValue
+ * @param {boolean} [trim=true] Set to false if you do not want the value to be trimmed
  * @returns {string}
  */
-function cf(stringValue: string, trim: boolean = false): string {
-  if (isArray(stringValue) === false && isString(stringValue) === false) {
-    return '';
+function cf(stringValue: any, trim?: boolean): string {
+  let doTrim = isBool(trim)
+    ? trim
+    : true
+  let strValue = _.toString(stringValue)
+  let returnString = strValue.toLocaleLowerCase()
+  if (doTrim === true) {
+    returnString = returnString.trim()
   }
-  let returnString = _.toString(stringValue).toLowerCase()
-  if (trim === true) returnString = returnString.trim()
   return returnString
 }
 
 /**
- * Casefolds val, and trims it. Returns an empty string
- * if the provided value is not a string.
+ * Casefolds val, and trims it. Useful when being passed more than one parameter, but you
+ * only want to process the first one
  *
- * @param {string} val
+ * @param {any} val
  * @returns {string}
  */
-function cfTrim(val: string): string {
+function cfTrim(val: any): string {
   return cf(val, true)
 }
 
 /**
- * Returns an object, where all keys have been casefolded
+ * Returns a casefolded and trimmed copy of val, if it is not a Symbol.
+ * Set trim to false if you do not want it trimmed.
+ *
+ * @param {boolean|number|null|Symbol|string} val
+ * @param {boolean} trim
+ * @returns {any}
+ */
+function _cfKey(val: boolean|number|null|string, trim: boolean = true): string {
+  let strVal;
+  if (null === val || isBool(val) || isNumber(val) || isString(val)) {
+    strVal = cf('' + val, trim)
+  } else {
+    strVal = cf(_.toString(val), trim)
+  }
+  return strVal
+}
+
+/**
+ * Returns an object, where all keys have been recursively casefolded
+ * If obj is not an object, then an empty object will be returned
  *
  * @param {object} obj
  * @param {boolean} trim
  * @returns {object}
  */
 function cfKeysRecursive(obj: Object, trim: boolean): Object {
-  if (toType(obj) !== 'object') return {}
-  let cfFunction = (trim === true) ? cfTrim : cf
-  let objectClone: Object = cloneObj(obj)
   let returnObject: Object = {}
-  Object.keys(objectClone).map(function (k) {
-    let v = objectClone[k]
-    if (toType(v) === 'object') v = cfKeysRecursive(v, trim)
-    returnObject[cfFunction(k)] = v
-  })
+
+  if (isObject(obj) && hasKeys(obj)) {
+    Object.entries(obj).map(function ([k, v]) {
+      k = _cfKey(k, trim)
+      if (toType(v) === 'object') {
+        v = cfKeysRecursive(v, trim)
+      }
+      returnObject[k] = v
+    })
+  }
   return returnObject
 }
 
 /**
- * Like Object.keys, except that each key is processed by caseFold. If trim
- * is true, then the keys will be trimmed, as well.
- * If recurse is true, the the result is an object, and all child objects
- * will also have their keys case-folded, as well. Note that you must provide
- * a value for trim (even if undefined), to set recurse.
+ * Like Object.keys, except that each key is processed by caseFold.
+ * If trim is false, then the keys will not be trimmed
  *
  * @param {object} obj
- * @param {boolean} trim
- * @param {boolean} recurse
+ * @param {boolean} trim Defaults to true
  * @returns {string[]}
  */
-function cfKeys(obj: Object, trim: boolean, recurse: boolean = false): string[] | object {
-  let localObject = (toType(obj) === 'object') ? obj : {}
-  if (recurse === true) {
-    return cfKeysRecursive(obj, trim)
-  } else {
-    return Object.keys(localObject).map(k => {
-      return cf(k, trim)
+function cfKeys(obj: Object, trim: boolean): string[] {
+  let returnObject: string[] = []
+  try {
+    returnObject = Object.keys(obj).map(k => {
+      return _cfKey(k, trim)
     })
-  }
+  } catch (_er) {}
+  return returnObject
 }
 
 /**
- * Returns True if key is in obj. If key is an array, then
- * the values are expected to be a list of progressively nested
- * properties of obj
+ * Returns true if key (or any of key's elements, if it is an Array)
+ * is in obj.
+ * Returns false if the value is not found, if obj is not an object,
+ * or if key is not a string or string array
  *
  * @param {object} obj
  * @param {string|string[]} key
  * @returns {boolean}
  */
-function cfHas(obj: Object, key: string | string[]): boolean {
-  if (toType(obj) !== 'object') {
-    return false
+function cfHas(obj: Object, key: validKeyTypes | validKeyTypeArray): boolean {
+  let returnValue = false;
+  if (isKeyType(key) || isKeyArray(key)) {
+    let foundValue = cfGetKey(obj, key)
+    returnValue = (typeof foundValue !== 'undefined')
   }
-  if (typeof key !== 'string' && isStringArray(key) === false) {
-    return false
-  }
-  let childObject = obj
-  let lookupPaths = (Array.isArray(key) ? key : key.split('.')).map(k => {
-    return cf(k, true)
-  })
-  let lastPath = lookupPaths.pop()
-  lookupPaths.map(p => {
-    childObject = cfGet(childObject, p)
-  })
-  if (notNil(childObject) && typeof lastPath === 'string') {
-    let childKeys = cfKeys(childObject, true)
-    if (Array.isArray(childKeys)) {
-      return childKeys.indexOf(lastPath) > -1
-    }
-  }
-  return false
+  return returnValue
 }
 
 /**
@@ -439,65 +857,87 @@ function cfHas(obj: Object, key: string | string[]): boolean {
  * @returns {boolean}
  */
 function cfEquals(string1: string, string2: string): boolean {
-  if (typeof string1 === 'string' && typeof string2 === 'string') {
-    if (string1 === string2) return true
-    if (cfTrim(string1) === cfTrim(string2)) return true
+  if (string1 === string2) {
+    return true
   }
+
+  if (typeof string1 === 'string' && typeof string2 === 'string') {
+    if (cfTrim(string1) === cfTrim(string2)) {
+      return true
+    }
+  }
+
   return false
 }
 
 /**
- * Like startsWith, but doesn't case about casing
+ * Like String.startsWith, but doesn't case about casing
  *
  * @param {string} string
  * @param {string} searchValue
- * @param {boolean} [trim=false] Trim values when searching
+ * @param {boolean} [trim=true] Trim values when searching
  * @returns {boolean}
  */
-function cfStartsWith(stringValue: string, searchValue: string, trim: boolean = false): boolean {
-  if (toType(stringValue) !== 'string' || toType(searchValue) !== 'string') return false
-  if (_.toString(stringValue) === '' || _.toString(searchValue) === '') return false
-  return cf(stringValue, trim).startsWith(cf(searchValue, trim))
+function cfStartsWith(stringValue: string, searchValue: string, trim?: boolean): boolean {
+  if (isString(stringValue) === false || isString(searchValue) === false) {
+    return false
+  }
+
+  if (_.toString(stringValue) === '' || _.toString(searchValue) === '') {
+    return false
+  }
+
+  let doTrim = isBool(trim)
+    ? trim
+    : true
+  return cf(stringValue, trim).startsWith(cf(searchValue, doTrim))
 }
 
 /**
- * Like endsWith, but doesn't case about casing
+ * Like String.endsWith, but doesn't case about casing
  *
  * @param {string} string
  * @param {string} searchValue
- * @param {boolean} [trim=false] Trim values when searching
+ * @param {boolean} [trim=true] Trim values when searching
  * @returns {boolean}
  */
-function cfEndsWith(stringValue: string, searchValue: string, trim: boolean = false): boolean {
-  if (toType(stringValue) !== 'string' || toType(searchValue) !== 'string') return false
-  if (_.toString(stringValue) === '' || _.toString(searchValue) === '') return false
-  return cf(stringValue, trim).endsWith(cf(searchValue, trim))
+function cfEndsWith(stringValue: string, searchValue: string, trim?: boolean): boolean {
+  if (isString(stringValue) === false || isString(searchValue) === false) {
+    return false
+  }
+
+  if (_.toString(stringValue) === '' || _.toString(searchValue) === '') {
+    return false
+  }
+
+  let doTrim = isBool(trim)
+    ? trim
+    : true
+  return cf(stringValue, trim).endsWith(cf(searchValue, doTrim))
 }
 
 /**
- * Like indexOf, but doesn't care about casing
+ * Like Array.indexOf or String.indexOf, but doesn't care about casing
  *
  * @param {string|string[]} stringOrStrArray
  * @param {string} searchValue
- * @param {boolean} [trim=false] Trim values when searching
+ * @param {boolean} [trim=true] Trim values when searching
  * @returns {number} -1 if not found, or the index of the found value
  */
 function cfIndexOf(stringOrStrArray: string | string[], searchValue: string, trim: boolean = false): number {
-  if (toType(searchValue) !== 'string' || searchValue.trim() === '') {
+  if (isString(searchValue) === false || searchValue.trim() === '') {
     return -1
   }
-  if (toType(stringOrStrArray) !== 'string' && isStringArray(stringOrStrArray) === false) {
-    return -1
-  }
-
-  let cleanString = cf(searchValue, trim)
-  if (Array.isArray(stringOrStrArray)) {
-    return stringOrStrArray.findIndex(e => {
+  let returnValue = -1
+  let cleanString = cf(searchValue, isBool(trim) ? trim : true)
+  if (isString(stringOrStrArray)) {
+    returnValue = cf(stringOrStrArray, trim).indexOf(cleanString)
+  } else if(isStringArray(stringOrStrArray)) {
+    returnValue = stringOrStrArray.findIndex(e => {
       return cf(e, trim) === cleanString
     })
-  } else {
-    return cf(stringOrStrArray, trim).indexOf(cleanString)
   }
+  return returnValue
 }
 
 /**
@@ -509,67 +949,67 @@ function cfIndexOf(stringOrStrArray: string | string[], searchValue: string, tri
  * @returns {string|undefined} The value from the array, or undefined, if it is not found
  */
 function find(stringArray: string | string[], searchValue: string, trim: boolean = false): string | undefined {
-  let foundValue
-  if (toType(searchValue) !== 'string' || searchValue.trim() === '') {
-    return foundValue
+  let returnValue
+  if (isString(searchValue) === false || searchValue.trim() === '') {
+    return returnValue
   }
   if (isStringArray(stringArray) === false) {
-    return foundValue
+    return returnValue
   }
   let valueIndex = cfIndexOf(stringArray, searchValue)
   if (valueIndex > -1) {
-    foundValue = stringArray[valueIndex]
+    returnValue = stringArray[valueIndex]
   }
-  return foundValue
+  return returnValue
 }
 
 /**
- * Returns an object mapped from _.keys(obj).
- * Each key in the returned object will be
- * _.caseFold(objKey), and that key's value
+ * Returns an object mapped from _.keys(obj). Each key in the
+ * returned object will be casefolded, and that key's value
  * will be the original form of objKey.
- * If trim is true, then the keys will
- * be trimmed as well.
+ * If trim is false, then keys will not be trimmed
+ * If recurse is true, then every child object will be traversed
+ *
+ * @example
+ * let obj = {'foo': {'bar': 'bar'}, 'fooBAR': 'bar'}
+ * keyMap(obj, true, false) => {'foo': 'foo', 'foobar': 'fooBAR'}
+ *
+ * @example
+ * let obj = {'foo ': {'bar': 'bar'}, 'fooBAR': 'bar'}
+ * keyMap(obj, false, false) => {'foo ': 'foo ', 'foobar': 'fooBAR'}
+ *
+ * @example
+ * let obj = {'foo': {'BAR': {'bAr': 'foo'}}, 'fooBAR': 'bar'}
+ * keyMap(obj, true, true) => {'foo': {'bar': {'bar': 'bAr'}}, 'foobar': 'fooBAR'}
  *
  * @param {object} obj
- * @param {boolean} trim
+ * @param {boolean} trim Defaults to true
+ * @param {boolean} recurse Defaults to false
  * @returns {object}
  */
-function cfKeyMap(obj: any, trim: boolean = false): Object {
-  let cfFunction = (trim === true) ? cfTrim : cf
+function cfKeyMap(obj: any, trim: boolean = true, recurse: boolean = false): Object {
+  let doTrim = (typeof trim === 'boolean')
+    ? trim
+    : true
+  let cfFunc = doTrim
+    ? cfTrim
+    : (val: string) => {return cf(val, false)}
+
   let returnObj: Object = {}
   if (typeof obj === 'object') {
-    Object.keys(obj).map(function (k) {
-      returnObj[cfFunction(k)] = k
+    Object.keys(obj).map(k => {
+      let cfKey = cfFunc(k)
+      let v = obj[k];
+      if (recurse === true && hasKeys(v)) {
+        returnObj[cfKey] = cfKeyMap(v, doTrim, recurse)
+      } else {
+        returnObj[cfKey] = k
+      }
     })
   } else {
     log('The object provided to cfKeyMap was type ' + toType(obj) + ' instead of object!')
   }
   return returnObj
-}
-
-/**
- * If path is a string, and objKeyMap is an object with keys,
- * returns the value of objKeyMap[path], if it can be found.
- * Otherwise returns undefined
- *
- * @param {string} path
- * @param {object} objKeyMap
- * @returns {string|undefined}
- */
-function _cfGetKeyFromMap(path: string, objKeyMap: Object): string | undefined {
-  let returnValue
-  if (typeof path === 'string') {
-    if (toType(objKeyMap) === 'object' && Object.keys(objKeyMap).length > 0) {
-      let foundKey = Object.keys(objKeyMap).find(k => {
-        return cfEquals(k, path)
-      })
-      if (typeof foundKey === 'number') {
-        returnValue = objKeyMap[foundKey]
-      }
-    }
-  }
-  return returnValue
 }
 
 /**
@@ -584,52 +1024,58 @@ function _cfGetKeyFromMap(path: string, objKeyMap: Object): string | undefined {
  * @param {object} obj
  * @param {string|string[]} path
  */
-function cfGetKey(obj: Object | undefined, path: string | string[]) {
-  if (isNil(obj)) return undefined
-  if (typeof obj !== 'object') return undefined
-  if (typeof path !== 'string' && isStringArray(path) === false) return undefined
-  let searchPath = path
-  let returnValue: string|undefined
-  if (Array.isArray(searchPath)) {
-    searchPath.map(p => {
-      if (notNil(returnValue)) {
-        let foundKey = cfGetKey(obj, p)
-        if (notNil(foundKey)) {
-          returnValue = foundKey
-        }
-      }
-    })
-  } else {
-    let lookupPaths = searchPath.split('.')
-    let lastPath = lookupPaths.pop()
-    let foundPaths: string[] = []
-    let childObj: Object | undefined = obj
-    let childObjMap = cfKeyMap(childObj)
-    lookupPaths.map(lookupPath => {
-      if (typeof childObj === 'object') {
-        let objPath = _cfGetKeyFromMap(lookupPath, childObjMap)
-        if (typeof objPath === 'string') {
-          foundPaths.push(objPath)
-          childObj = childObj[objPath]
+function cfGetKey(obj: Object | undefined, path: validKeyTypes | validKeyTypeArray): string|undefined {
+  if (typeof obj === 'undefined' || isObject(obj) === false) {
+    return undefined
+  }
+
+  let returnValue: string|undefined,
+    foundKey: validKeyTypes|undefined
+  if (isKeyType(path)) {
+    let keyParts = toKeyArray(path)
+    let lastKey = keyParts.pop()
+    let childObj: Object|undefined = obj
+    let foundKeys: validKeyTypeArray = []
+
+    keyParts.map(k => {
+      if (isObject(childObj)) {
+        let childKey = cfGetKey(childObj, k)
+        if (typeof childKey !== 'undefined') {
+          foundKeys.push(childKey)
+          childObj = childObj[childKey]
         } else {
           childObj = undefined
         }
-        childObjMap = cfKeyMap(childObj)
       }
     })
 
-    if (toType(childObj) !== 'undefined' && typeof lastPath === 'string') {
-      let objPath = _cfGetKeyFromMap(lastPath, childObjMap)
-      if (typeof objPath === 'string') {
-        foundPaths.push(objPath)
-      } else {
-        foundPaths = []
+    if (isObject(childObj) && isKeyType(lastKey)) {
+      // TODO: Support array element retrieval
+      let lastPart = Object.keys(childObj).find(k => {
+        return _cfKey(k) === _cfKey('' + lastKey)
+      })
+      if (typeof lastPart !== 'undefined') {
+        foundKeys.push(lastPart)
+        foundKey = foundKeys.map(k => {
+          return '' + k
+        }).join('.')
       }
     }
-    if (foundPaths.length > 0) {
-      returnValue = foundPaths.join('.')
-    }
+  } else if (isKeyArray(path)) {
+    path.find(k => {
+      let foundPath = cfGetKey(obj, k);
+      if (typeof foundPath !== 'undefined') {
+        foundKey = foundPath
+        return true
+      }
+      return false
+    })
   }
+
+  if (typeof foundKey !== 'undefined') {
+    returnValue = '' + foundKey
+  }
+
   return returnValue
 }
 
@@ -648,45 +1094,16 @@ function cfGetKey(obj: Object | undefined, path: string | string[]) {
  * @param {string|string[]} path
  * @param {any} defaultValue
  */
-function cfGet(obj: Object | Object | undefined, path: string | string[], defaultValue?: any) {
-  if (isNil(obj)) return undefined
-  if (hasKeys(obj) === false) return undefined
-  if (toType(path) !== 'string' && isStringArray(path) === false) return undefined
-  let searchPath = path
-  let returnValue
-
-  if (Array.isArray(searchPath)) {
-    searchPath.find(p => {
-      returnValue = cfGet(obj, p)
-      return toType(returnValue) !== 'undefined'
-    })
-  } else {
-    returnValue = _.get(obj, searchPath)
-    if (isNil(returnValue)) {
-      let lookupPaths = searchPath.split('.')
-      let lastPath = lookupPaths.pop()
-      let childObj = obj
-      if (lookupPaths.length > 0) {
-        lookupPaths.map(lookupPath => {
-          if (notNil(childObj)) childObj = cfGet(childObj, lookupPath)
-        })
-      }
-      if (typeof childObj === 'object') {
-        let cleanLastPath = (typeof lastPath === 'string')
-          ? lastPath
-          : ''
-
-        let objKeys = Object.keys(childObj)
-        let lastPathIndex = objKeys.findIndex(k => {
-          return cfEquals(k, cleanLastPath)
-        })
-        if (lastPathIndex > -1) {
-          returnValue = childObj[objKeys[lastPathIndex]]
-        }
-      }
+function cfGet(obj: Object | Object | undefined, path: validKeyTypes | validKeyTypeArray, defaultValue?: any): any {
+  let returnValue;
+  if (typeof obj !== 'undefined') {
+    let foundPath = cfGetKey(obj, path)
+    if (typeof foundPath !== 'undefined') {
+      returnValue = _.get(obj, foundPath)
+    } else {
+      returnValue = defaultValue
     }
   }
-  if (isNil(returnValue)) returnValue = defaultValue
   return returnValue
 }
 
@@ -701,27 +1118,33 @@ function cfGet(obj: Object | Object | undefined, path: string | string[], defaul
  * @param {any} value
  * @returns {object}
  */
-function cfSet(obj: Object | Object | undefined, path: string | string[], value: any): Object | Object | undefined {
-  if (toType(path) !== 'string' && isStringArray(path) === false) return obj
+function cfSet(obj: Object | Object | undefined, path: validKeyTypes | validKeyTypeArray, value: any): Object | undefined {
+  if (isKeyType(path) === false && isKeyArray(path) === false) {
+    return obj
+  }
   let returnObject: Object = (typeof obj === 'object') ? obj : {}
+
   let childObj = returnObject
-  let lookupPaths = Array.isArray(path) ? path : path.split('.')
+  let lookupPaths = toKeyArray(path)
   let setPath = lookupPaths.pop()
+
   lookupPaths.map(p => {
-    let v = cfGet(childObj, p)
-    if (isNil(v)) {
+    let existingPath = cfGetKey(childObj, p)
+    if (typeof existingPath !== 'string') {
       _.set(childObj, p, {})
-      v = _.get(childObj, p)
+      existingPath = p
+    } else if (typeof childObj[existingPath] !== 'object') {
+      _.set(childObj, existingPath, {})
     }
-    childObj = v
+    childObj = _.get(childObj, existingPath)
   })
-  if (typeof setPath === 'string') {
-    // Make sure we set existing keys, even if our casing is different
+
+  if (isKeyType(setPath)) {
     let existingPath = cfGetKey(childObj, setPath)
     if (typeof existingPath === 'string') {
       _.set(childObj, existingPath, value)
     } else {
-      _.set(childObj, setPath, value)
+      _.set(childObj, '' + setPath, value)
     }
   }
   return returnObject
@@ -750,7 +1173,7 @@ function cfSet(obj: Object | Object | undefined, path: string | string[], value:
  *   'har': 'har',
  *   'barCount': (msg) => {
  *     let arrayValue = caseFold.get(msg, 'bar.foo');
- *     if (Array.isArray(arrayValue)) {
+ *     if (isArray(arrayValue)) {
  *       return arrayValue.length;
  *     }
  *   }
@@ -770,7 +1193,7 @@ function cfSet(obj: Object | Object | undefined, path: string | string[], value:
  */
 function transformObject(sourceObject: Object | Object | undefined, mappingObject: MappingObject, options?: TransformOptions): Object | Object | undefined {
   let transformOptions = getTransformOptions(options)
-  if (Array.isArray(sourceObject)) {
+  if (isArray(sourceObject)) {
     return sourceObject.map(obj => {
       return transformObject(obj, mappingObject, options)
     })
@@ -788,7 +1211,7 @@ function transformObject(sourceObject: Object | Object | undefined, mappingObjec
     let result
     if (typeof transformValue === 'function') {
       result = transformValue(sourceObject, transformOptions.context)
-    } else if (typeof transformValue === 'string' || Array.isArray(transformValue)) {
+    } else if (typeof transformValue === 'string' || isArray(transformValue)) {
       result = cfGet(sourceObject, transformValue)
     } else {
       result = transformObject(sourceObject, transformValue, transformOptions)

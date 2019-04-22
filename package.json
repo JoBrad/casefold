@@ -1,6 +1,6 @@
 {
   "name": "casefold",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A string utility package for caseless comparison of strings",
   "main": "bin/index.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "@types/chai": "^4.1.7",
     "@types/lodash": "^4.14.123",
     "@types/mocha": "^5.2.6",
-    "@types/node": "^11.13.5",
+    "@types/node": "^11.13.6",
     "chai": "^4.2.0",
     "mocha": "^6.1.4",
     "typescript": "^3.4.4"

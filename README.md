@@ -31,6 +31,7 @@ Provides generic functions which, when referencing string functions, use caseFol
     * isBool
     * isObject
       * Uses the toType function to determine if an object's type is 'object'. Will not return true for Arrays, etc.
+    * isArray
     * isFunction
       * Uses the toType function to determine if an object's type is `function`
     * isError
@@ -38,13 +39,13 @@ Provides generic functions which, when referencing string functions, use caseFol
     * isStringArray
       * Returns true if the provided object is an Array that contains at least one element, and whose elements are all strings
   * toBool
-    * Attempts to convert the provided object to a boolean, using more strict logic than just a "truthy" test:
+    * Attempts to convert the provided object to a boolean, using more strict logic than just a "truthy" test. You can provide custom true/false values, or rely on the values below.
       * Booleans are just returned
       * true is returned if the value is 1, '1', 'y', 'yes', or 'true'
       * false is returned if the value is 0, '0', 'n', 'no', or 'false'
       * Otherwise undefined is returned
   * cloneObj
-    * Uses JSON.parse(JSON.stringify(obj)) to clone the provided object; falls back to lodash's _.cloneDeep function; then falls back to just returning the original object. This will be changed to throw an error in the future.
+    * Uses lodash's _.cloneDeep function to deeply clone an object
   * hasKeys
     * Returns true if the provided object is of type "object" and has its own keys (using Object.keys)
   * keyForValue
@@ -59,33 +60,35 @@ Provides core casefold functionality.
 * caseFold
   * Returns a casefolded version of the provided string
 * caseFold.trim
-  * Returns a casefolded version of the provided string, that is also trimmed
+  * Same as passing caseFold only one parameter. Helpful if you are mapping values to this function, and the second parameter may be a boolean, but you always want to trim the values
 * caseFold.equals
   * Returns true if the provided values are equal. If they are strings, then they are compared using caseFold.
 * caseFold.endsWith
+  * Like String.endsWith, but uses caseFold for comparison
 * caseFold.startsWith
+  * Like String.startsWith, but uses caseFold for comparison
+* caseFold.indexOf
+  * Like Array.indexOf or String.indexOf, but uses caseFold
 
 ### Arrays
 * caseFold.indexOf
-  * Like Array.indexOf, but uses caseFold
+  * Like Array.indexOf or String.indexOf, but uses caseFold
 * caseFold.find
   * Like Array.find, but uses caseFold
 
 ### Objects
 * caseFold.has
-  * Returns true if the provided object has the provided string property
+  * Returns true if the provided object has the provided string property, or any of an array of string properties
 * caseFold.get
   * Returns the value of a provided property or the first property in an array of properties
-* caseFold.set
-  * Sets a key to the provided value for the provided object. Looks for the key in the object without regard to casing, so that duplicate keys will not be created.
 * caseFold.getKey
   * Like caseFold.get, except it returns the key that was matched instead of the value
+* caseFold.set
+  * Sets a key to the provided value for the provided object. Existing keys will be reused, regardless of casing, to avoid creating duplicates.
 * caseFold.keys
-  * Returns either:
-    * An Array of caseFolded strings for the Object
-    * If recurse is set to true, the provided object values are recursively followed to return an object with caseFolded keys whose values are the original key value
+  * Returns an Array of caseFolded strings for the Object
 * caseFold.keyMap
-  * Returns an object whose keys are the casefolded keys of the provided object, and whose values are the original key. Does not recursively follow child objects
+  * Returns an object whose keys are the casefolded keys of the provided object, and whose values are the original key. If recurse is true, then child objects will be mapped, as well.
 
 ### Object Transformation
 This could arguably be broken out into its own package. However it relies heavily on the caseFold functions for operation, and was the original function of the package.

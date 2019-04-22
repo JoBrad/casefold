@@ -19,36 +19,170 @@ interface Object {
  */
 export interface TransformOptions {
     [key: string]: any;
-    exact_match: boolean;
     keep_unmatched: boolean;
     context?: Object;
 }
 export interface MappingObject {
     [key: string]: string | string[] | MappingObject | Function;
 }
+export interface BoolOptions {
+    [key: string]: any[] | undefined;
+    'true'?: any[];
+    'false'?: any[];
+}
+declare type validKeyTypes = boolean | number | null | string;
+declare type validKeyTypeArray = Array<validKeyTypes>;
 export declare const Utils: {
+    /**
+     * Uses `Object.prototype.toString.call` to return an object's
+     * type as a lower-cased string
+     *
+     * @param {any} obj
+     * @returns {string}
+     */
     toType: typeof toType;
+    /**
+     * Returns true if obj is null or undefined
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
     isNil: typeof isNil;
+    /**
+     * Returns false if obj is not null or undefined
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
     notNil: typeof notNil;
+    /**
+     * Returns true if obj is a number
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
     isNumber: typeof isNumber;
+    /**
+     * Returns true if obj is a string
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
     isString: typeof isString;
+    /**
+     * Returns true if obj is a boolean value
+     * @param {any} obj
+     * @returns {boolean}
+     */
     isBool: typeof isBool;
+    /**
+     * Returns true if the prototype of obj is Object
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
     isObject: typeof isObject;
+    /**
+     * Returns true if obj is an Array
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
+    isArray: typeof isArray;
+    /**
+     * Returns true if the prototype of obj is Function
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
     isFunction: typeof isFunction;
+    /**
+     * Returns true if the prototype of obj is Error
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
     isError: typeof isError;
+    /**
+     * Returns true if the provided object is an Array
+     * that contains at least one element, and whose elements
+     * are all strings
+     *
+     * @param {Array<any>} obj
+     * @returns {boolean}
+     */
     isStringArray: typeof isStringArray;
+    /**
+     * Attempts to convert obj to a boolean value, if it is not already one.
+     * Note that if obj is not a boolean, it is coerced to a string and casefolded
+     * before comparison to true/false values.
+     * Default true/false values are:
+     *  true: 'true', 'yes', 'y', '1', 1
+     *  false: 'false', 'no', 'n', '0', 0
+     *
+     * @param {any} obj
+     * @param {boolean} defaultValue    Value to return if obj is one of
+     *                                  the defined values. A non-boolean value
+     *                                  will revert to undefined.
+     * @param {BoolOptions} boolOptions An optional object with true and/or false
+     *                                  keys. The value should be an array of acceptable
+     *                                  values for true or false, to be used instead of
+     *                                  the default values. String values should be lower-cased.
+     * @returns {boolean|undefined}
+     */
     toBool: typeof toBool;
+    /**
+     * Uses lodash to deeply clone obj
+     *
+     * @param {any} obj
+     * @returns {any}
+     */
     cloneObj: typeof cloneObj;
+    /**
+     * Returns true if the prototype of obj
+     * is Object, and the object has own keys
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
     hasKeys: typeof hasKeys;
+    /**
+     * Returns key from obj where key's value == the provided
+     * value. If value and key's value are strings, then they
+     * are matched without regard for casing.
+     * If the value cannot be matched, undefined is returned
+     *
+     * @param {object} obj
+     * @param {any} value
+     * @returns {string|undefined}
+     */
     keyForValue: typeof cfKeyForValue;
+    /**
+     * Returns an object is obj is already an object or if
+     * it can be parsed to one.
+     * Otherwise returns undefined
+     *
+     * @param {any} obj
+     * @returns {object|undefined}
+     */
     safeJSONParse: typeof safeJSONParse;
 };
+/**
+ * Lower-cases stringValue using toLocaleLowerCase.
+ * The value will also be trimmed unless trim is set to false.
+ * Falls back to lodash's toString function if the value is not a string
+ *
+ * @param {any} stringValue
+ * @param {boolean} [trim=true] Set to false if you do not want the value to be trimmed
+ * @returns {string}
+ */
 export declare function caseFold(stringValue: string | any, trim?: boolean): string;
 export declare namespace caseFold {
     var endsWith: typeof cfEndsWith;
     var startsWith: typeof cfStartsWith;
     var get: typeof cfGet;
     var getKey: typeof cfGetKey;
+    var keyForValue: typeof cfKeyForValue;
     var has: typeof cfHas;
     var find: typeof find;
     var indexOf: typeof cfIndexOf;
@@ -73,78 +207,90 @@ declare function toType(obj: any): string;
  * @param {any} obj
  * @returns {boolean}
  */
-declare function isNil(obj: any): boolean;
+declare function isNil(obj: any): obj is null | undefined;
 /**
  * Returns false if obj is not null or undefined
  *
  * @param {any} obj
  * @returns {boolean}
  */
-declare function notNil(obj: any): boolean;
+declare function notNil(obj: any): obj is NonNullable<any>;
 /**
  * Returns true if obj is a number
  *
  * @param {any} obj
  * @returns {boolean}
  */
-declare function isNumber(obj: any): boolean;
+declare function isNumber(obj: any): obj is number;
 /**
  * Returns true if obj is a string
  *
  * @param {any} obj
  * @returns {boolean}
  */
-declare function isString(obj: any): boolean;
+declare function isString(obj: any): obj is string;
 /**
  * Returns true if obj is a boolean value
  * @param {any} obj
  * @returns {boolean}
  */
-declare function isBool(obj: any): boolean;
+declare function isBool(obj: any): obj is boolean;
 /**
  * Returns true if the prototype of obj is Object
  *
  * @param {any} obj
  * @returns {boolean}
  */
-declare function isObject(obj: any): boolean;
+declare function isObject(obj: any): obj is object;
+/**
+ * Returns true if obj is an Array
+ *
+ * @param {any} obj
+ * @returns {boolean}
+ */
+declare function isArray(obj: any): obj is any[];
 /**
  * Returns true if the prototype of obj is Function
  *
  * @param {any} obj
  * @returns {boolean}
  */
-declare function isFunction(obj: any): boolean;
+declare function isFunction(obj: any): obj is Function;
 /**
  * Returns true if the prototype of obj is Error
  *
  * @param {any} obj
  * @returns {boolean}
  */
-declare function isError(obj: any): boolean;
+declare function isError(obj: any): obj is Error;
 /**
  * Returns true if the provided object is an Array
  * that contains at least one element, and whose elements
  * are all strings
  *
- * @param {Array<any>} ary
+ * @param {Array<any>} obj
  * @returns {boolean}
  */
-declare function isStringArray(ary: any | any[]): boolean;
+declare function isStringArray(obj: any | any[]): obj is string[];
 /**
- * Attempts to convert obj to a boolean value.
- * If obj is a boolean it is returned.
- * True values are 'true', 'yes', 'y', '1', 1
- * False values are 'false', 'no', 'n', '0', 0
- * Case does not matter.
+ * Attempts to convert obj to a boolean value, if it is not already one.
+ * Note that if obj is not a boolean, it is coerced to a string and casefolded
+ * before comparison to true/false values.
+ * Default true/false values are:
+ *  true: 'true', 'yes', 'y', '1', 1
+ *  false: 'false', 'no', 'n', '0', 0
  *
  * @param {any} obj
- * @param {boolean} defaultValue  Value to return if obj is one of
- *                                the defined values. A non-boolean value
- *                                will revert to undefined.
+ * @param {boolean} defaultValue    Value to return if obj is one of
+ *                                  the defined values. A non-boolean value
+ *                                  will revert to undefined.
+ * @param {BoolOptions} boolOptions An optional object with true and/or false
+ *                                  keys. The value should be an array of acceptable
+ *                                  values for true or false, to be used instead of
+ *                                  the default values. String values should be lower-cased.
  * @returns {boolean|undefined}
  */
-declare function toBool(obj: any, defaultValue?: boolean): boolean | undefined;
+declare function toBool(obj: any, defaultValue?: boolean | undefined, boolOptions?: BoolOptions): boolean | undefined;
 /**
  * Returns true if the prototype of obj
  * is Object, and the object has own keys
@@ -165,7 +311,7 @@ declare function hasKeys(obj: any): boolean;
  */
 declare function cfKeyForValue(obj: Object, value: any): string | undefined;
 /**
- * Returns a copy of obj
+ * Uses lodash to deeply clone obj
  *
  * @param {any} obj
  * @returns {any}
@@ -181,36 +327,33 @@ declare function cloneObj(obj: any): any;
  */
 declare function safeJSONParse(obj: any): Object | undefined;
 /**
- * Casefolds val, and trims it. Returns an empty string
- * if the provided value is not a string.
+ * Casefolds val, and trims it. Useful when being passed more than one parameter, but you
+ * only want to process the first one
  *
- * @param {string} val
+ * @param {any} val
  * @returns {string}
  */
-declare function cfTrim(val: string): string;
+declare function cfTrim(val: any): string;
 /**
- * Like Object.keys, except that each key is processed by caseFold. If trim
- * is true, then the keys will be trimmed, as well.
- * If recurse is true, the the result is an object, and all child objects
- * will also have their keys case-folded, as well. Note that you must provide
- * a value for trim (even if undefined), to set recurse.
+ * Like Object.keys, except that each key is processed by caseFold.
+ * If trim is false, then the keys will not be trimmed
  *
  * @param {object} obj
- * @param {boolean} trim
- * @param {boolean} recurse
+ * @param {boolean} trim Defaults to true
  * @returns {string[]}
  */
-declare function cfKeys(obj: Object, trim: boolean, recurse?: boolean): string[] | object;
+declare function cfKeys(obj: Object, trim: boolean): string[];
 /**
- * Returns True if key is in obj. If key is an array, then
- * the values are expected to be a list of progressively nested
- * properties of obj
+ * Returns true if key (or any of key's elements, if it is an Array)
+ * is in obj.
+ * Returns false if the value is not found, if obj is not an object,
+ * or if key is not a string or string array
  *
  * @param {object} obj
  * @param {string|string[]} key
  * @returns {boolean}
  */
-declare function cfHas(obj: Object, key: string | string[]): boolean;
+declare function cfHas(obj: Object, key: validKeyTypes | validKeyTypeArray): boolean;
 /**
  * Returns true if string1 and string2 are the same, regardless of casing.
  *
@@ -220,29 +363,29 @@ declare function cfHas(obj: Object, key: string | string[]): boolean;
  */
 declare function cfEquals(string1: string, string2: string): boolean;
 /**
- * Like startsWith, but doesn't case about casing
+ * Like String.startsWith, but doesn't case about casing
  *
  * @param {string} string
  * @param {string} searchValue
- * @param {boolean} [trim=false] Trim values when searching
+ * @param {boolean} [trim=true] Trim values when searching
  * @returns {boolean}
  */
 declare function cfStartsWith(stringValue: string, searchValue: string, trim?: boolean): boolean;
 /**
- * Like endsWith, but doesn't case about casing
+ * Like String.endsWith, but doesn't case about casing
  *
  * @param {string} string
  * @param {string} searchValue
- * @param {boolean} [trim=false] Trim values when searching
+ * @param {boolean} [trim=true] Trim values when searching
  * @returns {boolean}
  */
 declare function cfEndsWith(stringValue: string, searchValue: string, trim?: boolean): boolean;
 /**
- * Like indexOf, but doesn't care about casing
+ * Like Array.indexOf or String.indexOf, but doesn't care about casing
  *
  * @param {string|string[]} stringOrStrArray
  * @param {string} searchValue
- * @param {boolean} [trim=false] Trim values when searching
+ * @param {boolean} [trim=true] Trim values when searching
  * @returns {number} -1 if not found, or the index of the found value
  */
 declare function cfIndexOf(stringOrStrArray: string | string[], searchValue: string, trim?: boolean): number;
@@ -256,18 +399,30 @@ declare function cfIndexOf(stringOrStrArray: string | string[], searchValue: str
  */
 declare function find(stringArray: string | string[], searchValue: string, trim?: boolean): string | undefined;
 /**
- * Returns an object mapped from _.keys(obj).
- * Each key in the returned object will be
- * _.caseFold(objKey), and that key's value
+ * Returns an object mapped from _.keys(obj). Each key in the
+ * returned object will be casefolded, and that key's value
  * will be the original form of objKey.
- * If trim is true, then the keys will
- * be trimmed as well.
+ * If trim is false, then keys will not be trimmed
+ * If recurse is true, then every child object will be traversed
+ *
+ * @example
+ * let obj = {'foo': {'bar': 'bar'}, 'fooBAR': 'bar'}
+ * keyMap(obj, true, false) => {'foo': 'foo', 'foobar': 'fooBAR'}
+ *
+ * @example
+ * let obj = {'foo ': {'bar': 'bar'}, 'fooBAR': 'bar'}
+ * keyMap(obj, false, false) => {'foo ': 'foo ', 'foobar': 'fooBAR'}
+ *
+ * @example
+ * let obj = {'foo': {'BAR': {'bAr': 'foo'}}, 'fooBAR': 'bar'}
+ * keyMap(obj, true, true) => {'foo': {'bar': {'bar': 'bAr'}}, 'foobar': 'fooBAR'}
  *
  * @param {object} obj
- * @param {boolean} trim
+ * @param {boolean} trim Defaults to true
+ * @param {boolean} recurse Defaults to false
  * @returns {object}
  */
-declare function cfKeyMap(obj: any, trim?: boolean): Object;
+declare function cfKeyMap(obj: any, trim?: boolean, recurse?: boolean): Object;
 /**
  * Returns the found key in obj, or undefined
  *
@@ -280,7 +435,7 @@ declare function cfKeyMap(obj: any, trim?: boolean): Object;
  * @param {object} obj
  * @param {string|string[]} path
  */
-declare function cfGetKey(obj: Object | undefined, path: string | string[]): string | undefined;
+declare function cfGetKey(obj: Object | undefined, path: validKeyTypes | validKeyTypeArray): string | undefined;
 /**
  * Looks for path's value in obj, regardless of casing differences
  * path can be a string (including a dotted-string), or an array of
@@ -296,7 +451,7 @@ declare function cfGetKey(obj: Object | undefined, path: string | string[]): str
  * @param {string|string[]} path
  * @param {any} defaultValue
  */
-declare function cfGet(obj: Object | Object | undefined, path: string | string[], defaultValue?: any): any;
+declare function cfGet(obj: Object | Object | undefined, path: validKeyTypes | validKeyTypeArray, defaultValue?: any): any;
 /**
  * Sets path to value, for obj
  *
@@ -308,7 +463,7 @@ declare function cfGet(obj: Object | Object | undefined, path: string | string[]
  * @param {any} value
  * @returns {object}
  */
-declare function cfSet(obj: Object | Object | undefined, path: string | string[], value: any): Object | Object | undefined;
+declare function cfSet(obj: Object | Object | undefined, path: validKeyTypes | validKeyTypeArray, value: any): Object | undefined;
 /**
  * Transforms sourceObject using mappingObject.
  * If sourceObject or mappingObject are not objects, or if none
@@ -332,7 +487,7 @@ declare function cfSet(obj: Object | Object | undefined, path: string | string[]
  *   'har': 'har',
  *   'barCount': (msg) => {
  *     let arrayValue = caseFold.get(msg, 'bar.foo');
- *     if (Array.isArray(arrayValue)) {
+ *     if (isArray(arrayValue)) {
  *       return arrayValue.length;
  *     }
  *   }
