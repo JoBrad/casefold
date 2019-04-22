@@ -282,7 +282,7 @@ caseFold.has = cfHas
  * @param {boolean} [trim=true] Set to true to trim values before comparison
  * @returns {string|undefined} The value from the array, or undefined, if it is not found
  */
-caseFold.find = find
+caseFold.find = cfFind
 
 /**
  * Like Array.indexOf or String.indexOf, but doesn't care about casing
@@ -948,7 +948,7 @@ function cfIndexOf(stringOrStrArray: string | string[], searchValue: string, tri
  * @param {boolean} [trim=true] Set to true to trim values before comparison
  * @returns {string|undefined} The value from the array, or undefined, if it is not found
  */
-function find(stringArray: string | string[], searchValue: string, trim: boolean = true): string | undefined {
+function cfFind(stringArray: string | string[], searchValue: string, trim: boolean = true): string | undefined {
   let returnValue
   if (isString(searchValue) === false || searchValue.trim() === '') {
     return returnValue

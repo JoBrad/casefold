@@ -1,6 +1,6 @@
 {
   "name": "casefold",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A string utility package for caseless comparison of strings",
   "main": "bin/index.js",
   "scripts": {

@@ -183,7 +183,7 @@ export declare namespace caseFold {
     var get: typeof cfGet;
     var getKey: typeof cfGetKey;
     var has: typeof cfHas;
-    var find: typeof find;
+    var find: typeof cfFind;
     var indexOf: typeof cfIndexOf;
     var keys: typeof cfKeys;
     var keyMap: typeof cfKeyMap;
@@ -396,7 +396,7 @@ declare function cfIndexOf(stringOrStrArray: string | string[], searchValue: str
  * @param {boolean} [trim=true] Set to true to trim values before comparison
  * @returns {string|undefined} The value from the array, or undefined, if it is not found
  */
-declare function find(stringArray: string | string[], searchValue: string, trim?: boolean): string | undefined;
+declare function cfFind(stringArray: string | string[], searchValue: string, trim?: boolean): string | undefined;
 /**
  * Returns an object mapped from _.keys(obj). Each key in the
  * returned object will be casefolded, and that key's value
