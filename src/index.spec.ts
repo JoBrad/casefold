@@ -194,10 +194,11 @@ describe('casefold module => ', () => {
       let testFunc = caseFold.indexOf
       let testCases: [[any, any], any][] = [
         [[['oo', 'foo'], 'oO'], 0],
-        [[['foobar', 'oO'], 'FoOBar'], 0],
+        [[['foobar', 1, false, 'oO'], 'oo'], 3],
         [[['ab', 'oo'], 'OO'], 1],
+        [['ab1', '1'], 2],
         [[['foo', {}], 'BAR'], -1],
-        [[[1, 1], 1], -1],
+        [[[1, 1], 1], 0],
         [['a', 'foo'], -1],
       ]
       testCases.map(([vars, expectedValue]) => {
@@ -660,9 +661,14 @@ describe('casefold module => ', () => {
 
     describe('#keyForValue', () => {
       let testFunc = Utils.keyForValue
+      let arrayObj = {
+        'foo': ['foo', 'bar'],
+        'bar': ['afoo', 'abar']
+      }
       let testCases: any[] = [
         [ [{'foo': 'bar'}, 'BAR'], 'foo'],
         [ [{'foo': 'bar', 'bar': 'foo'}, 'FOO'], 'bar'],
+        [ [arrayObj, 'AFoo'], 'bar'],
         [[{}, undefined], undefined],
         [['a', 'a'], undefined],
         [[undefined, 1], undefined],

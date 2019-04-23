@@ -684,26 +684,28 @@ function hasKeys(obj: any): boolean {
 
 /**
  * Returns key from obj where key's value == the provided
- * value. If value and key's value are strings, then they
- * are matched without regard for casing.
+ * value. If obj's values are arrays, then caseFold.indexOf
+ * is used to determine if the array contains a matching value.
+ * If value and key's value are strings, then they are matched
+ * using caseFold.equals.
  * If the value cannot be matched, undefined is returned
  *
  * @param {object} obj
- * @param {any} value
+ * @param {any} searchValue
  * @returns {string|undefined}
  */
-function cfKeyForValue(obj: Object, value: any): string | undefined {
+function cfKeyForValue(obj: Object, searchValue: any): string | undefined {
   let returnValue
   if (hasKeys(obj)) {
-    Object.keys(obj).find((k) => {
+    returnValue = Object.keys(obj).find(k => {
       let v = obj[k]
-      let doesMatch = (typeof value === 'string' && typeof v === 'string')
-        ? cfEquals(v, value)
-        : value == v
-      if (doesMatch === true) {
-        returnValue = k
+      if (isString(searchValue) && isArray(v)) {
+        return (cfIndexOf(v, searchValue) > -1)
+      } else if (typeof searchValue === 'string' && typeof v === 'string') {
+        return cfEquals(v, searchValue)
+      } else {
+        return (searchValue === v)
       }
-      return doesMatch
     })
   }
   return returnValue
@@ -918,23 +920,36 @@ function cfEndsWith(stringValue: string, searchValue: string, trim?: boolean): b
 
 /**
  * Like Array.indexOf or String.indexOf, but doesn't care about casing
+ * if searchValue is a string, and so is stringOrStrArray or its elements.
+ *
+ * If either stringOrStrArray or searchValue are empty strings, or if stringOrStrArray
+ * is an empty array, -1 is returned.
  *
  * @param {string|string[]} stringOrStrArray
- * @param {string} searchValue
+ * @param {any} searchValue
  * @param {boolean} [trim=true] Trim values when searching
  * @returns {number} -1 if not found, or the index of the found value
  */
-function cfIndexOf(stringOrStrArray: string | string[], searchValue: string, trim: boolean = true): number {
-  if (isString(searchValue) === false || searchValue.trim() === '') {
+function cfIndexOf(stringOrStrArray: string | string[], searchValue: any, trim: boolean = true): number {
+  if (isString(searchValue) === true && searchValue.trim() === '') {
     return -1
   }
+  if (isString(stringOrStrArray) && stringOrStrArray.trim() === '') {
+    return -1
+  } else if (isArray(stringOrStrArray) && stringOrStrArray.length === 0) {
+    return -1
+  }
+
   let returnValue = -1
-  let cleanString = cf(searchValue, isBool(trim) ? trim : true)
   if (isString(stringOrStrArray)) {
+    let cleanString = cf(searchValue, isBool(trim) ? trim : true)
     returnValue = cf(stringOrStrArray, trim).indexOf(cleanString)
-  } else if(isStringArray(stringOrStrArray)) {
+  } else if(isArray(stringOrStrArray)) {
     returnValue = stringOrStrArray.findIndex(e => {
-      return cf(e, trim) === cleanString
+      if (isString(e)) {
+        return cfEquals(cf(e, trim), cf(searchValue, trim))
+      }
+      return e === searchValue
     })
   }
   return returnValue

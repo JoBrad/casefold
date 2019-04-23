@@ -300,15 +300,17 @@ declare function toBool(obj: any, defaultValue?: boolean | undefined, boolOption
 declare function hasKeys(obj: any): boolean;
 /**
  * Returns key from obj where key's value == the provided
- * value. If value and key's value are strings, then they
- * are matched without regard for casing.
+ * value. If obj's values are arrays, then caseFold.indexOf
+ * is used to determine if the array contains a matching value.
+ * If value and key's value are strings, then they are matched
+ * using caseFold.equals.
  * If the value cannot be matched, undefined is returned
  *
  * @param {object} obj
- * @param {any} value
+ * @param {any} searchValue
  * @returns {string|undefined}
  */
-declare function cfKeyForValue(obj: Object, value: any): string | undefined;
+declare function cfKeyForValue(obj: Object, searchValue: any): string | undefined;
 /**
  * Uses lodash to deeply clone obj
  *
@@ -381,13 +383,17 @@ declare function cfStartsWith(stringValue: string, searchValue: string, trim?: b
 declare function cfEndsWith(stringValue: string, searchValue: string, trim?: boolean): boolean;
 /**
  * Like Array.indexOf or String.indexOf, but doesn't care about casing
+ * if searchValue is a string, and so is stringOrStrArray or its elements.
+ *
+ * If either stringOrStrArray or searchValue are empty strings, or if stringOrStrArray
+ * is an empty array, -1 is returned.
  *
  * @param {string|string[]} stringOrStrArray
- * @param {string} searchValue
+ * @param {any} searchValue
  * @param {boolean} [trim=true] Trim values when searching
  * @returns {number} -1 if not found, or the index of the found value
  */
-declare function cfIndexOf(stringOrStrArray: string | string[], searchValue: string, trim?: boolean): number;
+declare function cfIndexOf(stringOrStrArray: string | string[], searchValue: any, trim?: boolean): number;
 /**
  * Like Array.find, but doesn't care about casing
  *

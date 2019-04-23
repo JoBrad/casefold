@@ -39,17 +39,15 @@ Provides generic functions which, when referencing string functions, use caseFol
     * isStringArray
       * Returns true if the provided object is an Array that contains at least one element, and whose elements are all strings
   * toBool
-    * Attempts to convert the provided object to a boolean, using more strict logic than just a "truthy" test. You can provide custom true/false values, or rely on the values below.
-      * Booleans are just returned
-      * true is returned if the value is 1, '1', 'y', 'yes', or 'true'
-      * false is returned if the value is 0, '0', 'n', 'no', or 'false'
-      * Otherwise undefined is returned
+    * Attempts to convert the provided object to a boolean (or just returns it, if it is a boolean) using the logic below. You can optionally provide custom true/false values. If the value can't be matched, undefined is returned.
+      * true values: 1, '1', 'y', 'yes', or 'true'
+      * false values 0, '0', 'n', 'no', or 'false'
   * cloneObj
     * Uses lodash's _.cloneDeep function to deeply clone an object
   * hasKeys
     * Returns true if the provided object is of type "object" and has its own keys (using Object.keys)
   * keyForValue
-    * Returns the key in the provided object that has a value matching the provided value
+    * Returns the key in the provided object that has a value matching the provided value. Works for objects with string values, or for objects with arrays of values to match against.
   * safeJSONParse
     * If the provided object is already an object, it is returned; Tries to use JSON.parse to parse the provided value, then returns undefined if this fails
 
@@ -68,7 +66,7 @@ Provides core casefold functionality.
 * caseFold.startsWith
   * Like String.startsWith, but uses caseFold for comparison
 * caseFold.indexOf
-  * Like Array.indexOf or String.indexOf, but uses caseFold
+  * Like Array.indexOf or String.indexOf, but uses caseFold for string values
 
 ### Arrays
 * caseFold.indexOf
