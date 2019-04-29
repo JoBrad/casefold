@@ -95,7 +95,7 @@ export declare const Utils: {
      * @param {any} obj
      * @returns {boolean}
      */
-    isFunction: typeof isFunction;
+    isFunction: (value: any) => value is (...args: any[]) => any;
     /**
      * Returns true if the prototype of obj is Error
      *
@@ -254,7 +254,6 @@ declare function isArray(obj: any): obj is any[];
  * @param {any} obj
  * @returns {boolean}
  */
-declare function isFunction(obj: any): obj is Function;
 /**
  * Returns true if the prototype of obj is Error
  *
@@ -404,7 +403,7 @@ declare function cfIndexOf(stringOrStrArray: string | string[], searchValue: any
  */
 declare function cfFind(stringArray: string | string[], searchValue: string, trim?: boolean): string | undefined;
 /**
- * Returns an object mapped from _.keys(obj). Each key in the
+ * Returns an object mapped from Object.keys(obj). Each key in the
  * returned object will be casefolded, and that key's value
  * will be the original form of objKey.
  * If trim is false, then keys will not be trimmed
