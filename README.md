@@ -43,7 +43,7 @@ Provides generic functions which, when referencing string functions, use caseFol
       * true values: 1, '1', 'y', 'yes', or 'true'
       * false values 0, '0', 'n', 'no', or 'false'
   * cloneObj
-    * Uses lodash's _.cloneDeep function to deeply clone an object
+    * Uses lodash's cloneDeep function to deeply clone an object
   * hasKeys
     * Returns true if the provided object is of type "object" and has its own keys (using Object.keys)
   * keyForValue

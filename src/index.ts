@@ -1,5 +1,7 @@
 const log = require('debug')('casefold')
-import _ from 'lodash'
+import {
+  cloneDeep, get, set, isFunction, toString
+} from 'lodash'
 
 /**
  * casefold
@@ -308,7 +310,7 @@ caseFold.indexOf = cfIndexOf
 caseFold.keys = cfKeys
 
 /**
- * Returns an object mapped from _.keys(obj). Each key in the
+ * Returns an object mapped from Object.keys(obj). Each key in the
  * returned object will be casefolded, and that key's value
  * will be the original form of objKey.
  * If trim is false, then keys will not be trimmed
@@ -543,9 +545,10 @@ function isArray(obj: any): obj is any[] {
  * @param {any} obj
  * @returns {boolean}
  */
-function isFunction(obj: any): obj is Function {
-  return toType(obj) === 'function'
-}
+// function isFunction(obj: any): obj is Function {
+//   let objType = toType(obj)
+//   return ['function', 'asyncfunction'].indexOf(objType) > -1
+// }
 
 /**
  * Returns true if the prototype of obj is Error
@@ -655,7 +658,7 @@ function toBool(obj: any, defaultValue: boolean|undefined=undefined, boolOptions
     returnValue = defaultValue
   }
 
-  castValue = cf(_.toString(obj), true)
+  castValue = cf(toString(obj), true)
 
   if (boolValues['true'].indexOf(castValue) > -1) {
     returnValue = true
@@ -718,7 +721,7 @@ function cfKeyForValue(obj: Object, searchValue: any): string | undefined {
  * @returns {any}
  */
 function cloneObj(obj: any): any {
-  return _.cloneDeep(obj)
+  return cloneDeep(obj)
 }
 
 /**
@@ -754,7 +757,7 @@ function cf(stringValue: any, trim?: boolean): string {
   let doTrim = isBool(trim)
     ? trim
     : true
-  let strValue = _.toString(stringValue)
+  let strValue = toString(stringValue)
   let returnString = strValue.toLocaleLowerCase()
   if (doTrim === true) {
     returnString = returnString.trim()
@@ -786,7 +789,7 @@ function _cfKey(val: boolean|number|null|string, trim: boolean = true): string {
   if (null === val || isBool(val) || isNumber(val) || isString(val)) {
     strVal = cf('' + val, trim)
   } else {
-    strVal = cf(_.toString(val), trim)
+    strVal = cf(toString(val), trim)
   }
   return strVal
 }
@@ -885,7 +888,7 @@ function cfStartsWith(stringValue: string, searchValue: string, trim?: boolean):
     return false
   }
 
-  if (_.toString(stringValue) === '' || _.toString(searchValue) === '') {
+  if (toString(stringValue) === '' || toString(searchValue) === '') {
     return false
   }
 
@@ -908,7 +911,7 @@ function cfEndsWith(stringValue: string, searchValue: string, trim?: boolean): b
     return false
   }
 
-  if (_.toString(stringValue) === '' || _.toString(searchValue) === '') {
+  if (toString(stringValue) === '' || toString(searchValue) === '') {
     return false
   }
 
@@ -979,7 +982,7 @@ function cfFind(stringArray: string | string[], searchValue: string, trim: boole
 }
 
 /**
- * Returns an object mapped from _.keys(obj). Each key in the
+ * Returns an object mapped from Object.keys(obj). Each key in the
  * returned object will be casefolded, and that key's value
  * will be the original form of objKey.
  * If trim is false, then keys will not be trimmed
@@ -1114,7 +1117,7 @@ function cfGet(obj: Object | Object | undefined, path: validKeyTypes | validKeyT
   if (typeof obj !== 'undefined') {
     let foundPath = cfGetKey(obj, path)
     if (typeof foundPath !== 'undefined') {
-      returnValue = _.get(obj, foundPath)
+      returnValue = get(obj, foundPath)
     } else {
       returnValue = defaultValue
     }
@@ -1146,20 +1149,20 @@ function cfSet(obj: Object | Object | undefined, path: validKeyTypes | validKeyT
   lookupPaths.map(p => {
     let existingPath = cfGetKey(childObj, p)
     if (typeof existingPath !== 'string') {
-      _.set(childObj, p, {})
+      set(childObj, p, {})
       existingPath = p
     } else if (typeof childObj[existingPath] !== 'object') {
-      _.set(childObj, existingPath, {})
+      set(childObj, existingPath, {})
     }
-    childObj = _.get(childObj, existingPath)
+    childObj = get(childObj, existingPath)
   })
 
   if (isKeyType(setPath)) {
     let existingPath = cfGetKey(childObj, setPath)
     if (typeof existingPath === 'string') {
-      _.set(childObj, existingPath, value)
+      set(childObj, existingPath, value)
     } else {
-      _.set(childObj, '' + setPath, value)
+      set(childObj, '' + setPath, value)
     }
   }
   return returnObject

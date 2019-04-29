@@ -7,6 +7,7 @@ class SampleClass {
 }
 
 const noop = () => {}
+const noopAsync = async () => {}
 
 function getTestCases(testInput: any, argsAndResult: any[]): any[][] {
   let returnArry: any[][] = [];
@@ -534,6 +535,7 @@ describe('casefold module => ', () => {
 
       let testCases = [
         [noop, true],
+        [noopAsync, true],
         [SampleClass, true],
         [{}, false],
         [[], false],
