@@ -10,8 +10,8 @@ The idea for this package came from Python's [str.casefold](https://docs.python.
 # Future enhancements
 On the current to-do list:
 * [x] Convert string comparison to localecompare
-* [ ] The functions are not all consistent (e.g. some return undefined, some don't), due to the original requirements of the project that this was made for. The goal is to make all functions consistent.
-* [ ] Extend functions that access object properties to take full advantage of lodash's `get` and `set` options, especially with regards to Array access.
+* [x] The functions are not all consistent (e.g. some return undefined, some don't), due to the original requirements of the project that this was made for. The goal is to make all functions consistent.
+* [\] Extend functions that access object properties to take full advantage of lodash's `get` and `set` options, especially with regards to Array access.
 * [ ] Allow individual functions to be imported without importing the entire library.
 
 # API
@@ -102,3 +102,27 @@ This could arguably be broken out into its own package. However it relies heavil
       * A *Mapping object*. Useful when you have nested object schemas to retrieve from the Source object.
       * A *function*. The function will be passed the Source object as well as a Context object, if defined in the provided options.
 
+
+# Change Notes
+* 1.0.0
+  * Initial release!
+* 1.1.1
+  * Simplified internal processing
+  * Corrected some bugs in key retrieval
+  * caseFold.keys now only returns an array
+  * caseFold.keyMap will optionally recurse an object, producing the recursive keymap that caseFold.keys used to provide, when passed the recurse param
+  * Corrected an ambiguous name in the type definitions (find => cfFind)
+  * Added tests for all functions except transform
+  * Recurse defaults to true for keymap
+  * Updated trim default values on most functions to default to true
+  * Changed cloneObj to only use lodash's cloneDeep function
+* 1.2.1
+  * keyForValue now works for objects whose values are arrays
+  * indexOf will work on non-string arrays and non-string values. If the array element is a string, casefolding is applied.
+  * Added tests for new functionality
+* 1.2.2
+  * isFunction now uses lodash's isFunction method (previous version returned false for async functions, which have a different Object.prototype.toString.call value)
+  * Added a test for this case
+  * Enumerated lodash imports rather than importing the entire library
+* 1.2.3
+  * Added type signatures to support readonly arrays

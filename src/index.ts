@@ -933,7 +933,7 @@ function cfEndsWith(stringValue: string, searchValue: string, trim?: boolean): b
  * @param {boolean} [trim=true] Trim values when searching
  * @returns {number} -1 if not found, or the index of the found value
  */
-function cfIndexOf(stringOrStrArray: string | string[], searchValue: any, trim: boolean = true): number {
+function cfIndexOf(stringOrStrArray: string | any[] | readonly any[], searchValue: any, trim: boolean = true): number {
   if (isString(searchValue) === true && searchValue.trim() === '') {
     return -1
   }
@@ -966,7 +966,7 @@ function cfIndexOf(stringOrStrArray: string | string[], searchValue: any, trim: 
  * @param {boolean} [trim=true] Set to true to trim values before comparison
  * @returns {string|undefined} The value from the array, or undefined, if it is not found
  */
-function cfFind(stringArray: string | string[], searchValue: string, trim: boolean = true): string | undefined {
+function cfFind(stringArray: string | string[] | readonly string[], searchValue: string, trim: boolean = true): string | undefined {
   let returnValue
   if (isString(searchValue) === false || searchValue.trim() === '') {
     return returnValue

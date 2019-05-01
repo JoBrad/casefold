@@ -392,7 +392,7 @@ declare function cfEndsWith(stringValue: string, searchValue: string, trim?: boo
  * @param {boolean} [trim=true] Trim values when searching
  * @returns {number} -1 if not found, or the index of the found value
  */
-declare function cfIndexOf(stringOrStrArray: string | string[], searchValue: any, trim?: boolean): number;
+declare function cfIndexOf(stringOrStrArray: string | any[] | readonly any[], searchValue: any, trim?: boolean): number;
 /**
  * Like Array.find, but doesn't care about casing
  *
@@ -401,7 +401,7 @@ declare function cfIndexOf(stringOrStrArray: string | string[], searchValue: any
  * @param {boolean} [trim=true] Set to true to trim values before comparison
  * @returns {string|undefined} The value from the array, or undefined, if it is not found
  */
-declare function cfFind(stringArray: string | string[], searchValue: string, trim?: boolean): string | undefined;
+declare function cfFind(stringArray: string | string[] | readonly string[], searchValue: string, trim?: boolean): string | undefined;
 /**
  * Returns an object mapped from Object.keys(obj). Each key in the
  * returned object will be casefolded, and that key's value
