@@ -128,3 +128,5 @@ This could arguably be broken out into its own package. However it relies heavil
   * Added type signatures to support readonly arrays
 * 1.2.4
   * Updated lodash to address CVE-2019-10744
+* 1.2.5
+  * Corrected invalid packaging
