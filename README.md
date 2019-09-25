@@ -126,3 +126,5 @@ This could arguably be broken out into its own package. However it relies heavil
   * Enumerated lodash imports rather than importing the entire library
 * 1.2.3
   * Added type signatures to support readonly arrays
+* 1.2.4
+  * Updated lodash to address CVE-2019-10744
