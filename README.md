@@ -129,3 +129,6 @@ This could arguably be broken out into its own package. However it relies heavil
 * 1.2.4-1.2.7
   * Updated lodash to address CVE-2019-10744
   * Corrected invalid packaging
+* 1.2.8
+  * Updated mocha to address security advisory: https://github.com/advisories/GHSA-p9pc-299p-vxgp
+  * Added test for transform function
