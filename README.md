@@ -1,3 +1,5 @@
+![Tests](https://github.com/JoBrad/casefold/workflows/Tests/badge.svg?branch=master)
+
 # casefold
 The idea for this package came from Python's [str.casefold](https://docs.python.org/3/library/stdtypes.html#str.casefold) function, which allows strings to be compared without regard to casing. This package also auto-trims whitespace when comparing values, in most cases.
 
