@@ -1,5 +1,9 @@
-import { caseFold, Utils } from './index'
+import { caseFold, MappingObject, Utils } from './index'
 import { expect } from 'chai'
+
+type TestCase<Provided extends unknown, Expected extends unknown> = [Provided, Expected]
+type TestCases<Provided extends unknown, Expected extends unknown> = TestCase<Provided, Expected>[]
+
 
 class SampleClass {
   constructor() {
@@ -121,7 +125,7 @@ describe('casefold module => ', () => {
 
     describe('#trim', () => {
       let testFunc = caseFold.trim
-      let testCases = [
+      let testCases: TestCases<string, string> = [
         ['FOO  ', 'foo'],
         ['FOO  ', 'foo'],
         ['  FOO', 'foo'],
@@ -139,7 +143,7 @@ describe('casefold module => ', () => {
 
     describe('#equals', () => {
       let testFunc = caseFold.equals
-      let testCases: any[] = [
+      let testCases: TestCases<[any, any], boolean> = [
         [[' FOO ', 'foo'], true],
         [['foo', 'foo'], true],
         [['bar', 'bar'], true],
@@ -159,7 +163,7 @@ describe('casefold module => ', () => {
 
     describe('#endsWith', () => {
       let testFunc = caseFold.endsWith
-      let testCases: [[any, any], boolean][] = [
+      let testCases: TestCases<[any, any], boolean> = [
         [['FOO', 'oO'], true],
         [['foobar', 'oO'], false],
         [[{}, 'oo'], false],
@@ -176,7 +180,7 @@ describe('casefold module => ', () => {
 
     describe('#startsWith', () => {
       let testFunc = caseFold.startsWith
-      let testCases: [[any, any], boolean][] = [
+      let testCases: TestCases<[any, any], boolean> = [
         [['FOO', 'fo'], true],
         [['foobar', 'BoO'], false],
         [[{}, 'oo'], false],
@@ -193,7 +197,7 @@ describe('casefold module => ', () => {
 
     describe('#indexOf', () => {
       let testFunc = caseFold.indexOf
-      let testCases: [[any, any], any][] = [
+      let testCases: TestCases<[any, any], any> = [
         [[['oo', 'foo'], 'oO'], 0],
         [[['foobar', 1, false, 'oO'], 'oo'], 3],
         [[['ab', 'oo'], 'OO'], 1],
@@ -212,7 +216,7 @@ describe('casefold module => ', () => {
 
     describe('#find', () => {
       let testFunc = caseFold.find
-      let testCases: [[any, any], any][] = [
+      let testCases: TestCases<[any[], any], string|undefined> = [
         [[['oo', 'foo'], 'oO'], 'oo'],
         [[['foobar', 'oO'], 'FoOBar'], 'foobar'],
         [[['ab', 'oo'], 'OO'], 'oo'],
@@ -230,7 +234,7 @@ describe('casefold module => ', () => {
 
     describe('#has', () => {
       let testFunc = caseFold.has
-      let testCases: [[any, any], any][] = [
+      let testCases: TestCases<[any, any], boolean> = [
         [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, ['bar', 'foo']], true],
         [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, ['bar', 'FOO']], true],
         [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, 'fOo'], true],
@@ -296,7 +300,7 @@ describe('casefold module => ', () => {
 
     describe('#set', () => {
       let testFunc = caseFold.set
-      let testCases: any[] = [
+      let testCases: TestCases<[any, any, any], Record<string, unknown>> = [
         [[{}, 'foo', {'foo': 'bar'}], {'foo': {'foo': 'bar'}}],
         [[{'foo': {'bar': 'bar'}, 'foobar': 'bar'}, 'FOO.bar', 1], {'foo': {'bar': 1}, 'foobar': 'bar'}],
         [[{'foo': {'Bar': 'Original bar'}}, 'FOO.bAR.foo', 1], {'foo': {'Bar': {'foo': 1}}}],
@@ -394,7 +398,24 @@ describe('casefold module => ', () => {
 
     describe('#transform', () => {
       let testFunc = caseFold.transform
-      it('Does not yet have tests!')
+      let mapper: MappingObject = {
+        bar: (obj: Record<string, unknown>) => caseFold.has(obj, 'foo.bar') ? caseFold.get(obj, 'foo.bar') : undefined,
+        barFoo: (obj: Record<string, unknown>) => caseFold.has(obj, 'foobar') ? caseFold.get(obj, 'foobar') : undefined,
+        foo: 'foo'
+      }
+      let testCases: TestCases<[Record<string, unknown>, MappingObject], Record<string, unknown>> = [
+        [[{'foo ': {'bar': 'bar '}, 'fooBAR': 'foo'}, mapper], {'bar': 'bar ', 'barFoo': 'foo', 'foo': {'bar': 'bar '}}],
+        [[{'fOO': {'bAR': 'bar'}, 'fooBAR': 'foo'}, mapper], {'bar': 'bar', 'barFoo': 'foo', 'foo': {'bAR': 'bar'}}],
+        [[{'foo': {'bar': 'bar'}, 'bar': 'nunya'}, mapper], {'bar': 'bar', 'foo': {'bar': 'bar'}}],
+        [[{'fooBAR': 'foo'}, mapper], {'barFoo': 'foo'}],
+        [[{'foob': {'BAR': {'bAr': 'foo'}}, 'ar': 'bar'}, mapper], {}],
+      ]
+      testCases.map(([vars, expectedValue]) => {
+        let [testObject, mapper] = vars
+        it(`Should return ${stringify(expectedValue)} when passed ${stringify(testObject)}`, () => {
+          expect(testFunc(testObject, mapper)).to.deep.equal(expectedValue)
+        })
+      })
     })
 
   })
