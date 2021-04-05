@@ -1,3 +1,5 @@
+![Tests](https://github.com/JoBrad/casefold/workflows/Tests/badge.svg?branch=master)
+
 # casefold
 The idea for this package came from Python's [str.casefold](https://docs.python.org/3/library/stdtypes.html#str.casefold) function, which allows strings to be compared without regard to casing. This package also auto-trims whitespace when comparing values, in most cases.
 
@@ -103,32 +105,15 @@ This could arguably be broken out into its own package. However it relies heavil
       * A *function*. The function will be passed the Source object as well as a Context object, if defined in the provided options.
 
 
-# Change Notes
-* 1.0.0
-  * Initial release!
-* 1.1.1
-  * Simplified internal processing
-  * Corrected some bugs in key retrieval
-  * caseFold.keys now only returns an array
-  * caseFold.keyMap will optionally recurse an object, producing the recursive keymap that caseFold.keys used to provide, when passed the recurse param
-  * Corrected an ambiguous name in the type definitions (find => cfFind)
-  * Added tests for all functions except transform
-  * Recurse defaults to true for keymap
-  * Updated trim default values on most functions to default to true
-  * Changed cloneObj to only use lodash's cloneDeep function
-* 1.2.1
-  * keyForValue now works for objects whose values are arrays
-  * indexOf will work on non-string arrays and non-string values. If the array element is a string, casefolding is applied.
-  * Added tests for new functionality
-* 1.2.2
-  * isFunction now uses lodash's isFunction method (previous version returned false for async functions, which have a different Object.prototype.toString.call value)
-  * Added a test for this case
-  * Enumerated lodash imports rather than importing the entire library
-* 1.2.3
-  * Added type signatures to support readonly arrays
-* 1.2.4-1.2.7
-  * Updated lodash to address CVE-2019-10744
-  * Corrected invalid packaging
-* 1.2.8
-  * Updated mocha to address security advisory: https://github.com/advisories/GHSA-p9pc-299p-vxgp
-  * Added test for transform function
+# Changelog
+
+Version | Notes
+--- | ---
+1.0.0 | Initial release!
+1.1.1 | Simplified internal processing; Corrected some bugs in key retrieval; caseFold.keys now only returns an array; caseFold.keyMap will optionally recurse an object, producing the recursive keymap that caseFold.keys used to provide, when passed the recurse param; Corrected an ambiguous name in the type definitions (find => cfFind); Added tests for all functions except transform; Recurse defaults to true for keymap; Updated trim default values on most functions to default to true; Changed cloneObj to only use lodash's cloneDeep function
+1.2.1 | keyForValue now works for objects whose values are arrays; indexOf will work on non-string arrays and non-string values. If the array element is a string, casefolding is applied.; Added tests for new functionality
+1.2.2 | isFunction now uses lodash's isFunction method (previous version returned false for async functions, which have a different Object.prototype.toString.call value); Added a test for this case; Enumerated lodash imports rather than importing the entire library
+1.2.3 | Added type signatures to support readonly arrays
+1.2.4-1.2.7 | Updated lodash to address CVE-2019-10744; Corrected invalid packaging
+1.2.8 | Updated mocha to address security advisory: https://github.com/advisories/GHSA-p9pc-299p-vxgp; Added test for transform function
+1.2.9 | Formatting changes to README
