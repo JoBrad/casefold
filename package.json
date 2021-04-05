@@ -4,8 +4,8 @@
   "description": "A string utility package for caseless comparison of strings",
   "main": "bin/index.js",
   "scripts": {
-    "build:tests": "tsc -p ./tsconfig.json",
-    "test": "npm run build:tests && mocha ./bin/**/*.spec.js"
+    "build": "npm ci && tsc --pretty",
+    "test": "npm run build && mocha ./bin/**/*.spec.js"
   },
   "repository": {
     "type": "git",
