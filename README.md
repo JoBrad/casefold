@@ -116,3 +116,4 @@ Version | Notes
 1.2.3 | Added type signatures to support readonly arrays
 1.2.4-1.2.7 | Updated lodash to address CVE-2019-10744; Corrected invalid packaging
 1.2.8 | Updated mocha to address security advisory: https://github.com/advisories/GHSA-p9pc-299p-vxgp; Added test for transform function
+1.2.9 | Formatting changes to README
