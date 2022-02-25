@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ $default-branch ]
   pull_request:
-    branches: [ master ]
+    branches: [ $default-branch ]
 
 jobs:
   build:
@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [13.x, 14.x]
+        node-version: [13.x, 14.x, 15.x, 16.x, 17.x]
 
     steps:
     - uses: actions/checkout@v2
