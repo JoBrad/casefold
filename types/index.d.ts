@@ -30,8 +30,8 @@ export interface BoolOptions {
     'true'?: any[];
     'false'?: any[];
 }
-declare type validKeyTypes = boolean | number | null | string;
-declare type validKeyTypeArray = Array<validKeyTypes>;
+type validKeyTypes = boolean | number | null | string;
+type validKeyTypeArray = Array<validKeyTypes>;
 export declare const Utils: {
     /**
      * Uses `Object.prototype.toString.call` to return an object's
@@ -82,6 +82,13 @@ export declare const Utils: {
      * @returns {boolean}
      */
     isObject: typeof isObject;
+    /**
+     * Returns true if the prototype of obj is a Record
+     *
+     * @param {any} obj
+     * @returns {boolean}
+     */
+    isRecord: typeof isRecord;
     /**
      * Returns true if obj is an Array
      *
@@ -241,6 +248,13 @@ declare function isBool(obj: any): obj is boolean;
  * @returns {boolean}
  */
 declare function isObject(obj: any): obj is object;
+/**
+ * Returns true if the prototype of obj is a Record
+ *
+ * @param {any} obj
+ * @returns {boolean}
+ */
+declare function isRecord(obj: any): obj is Record<string, unknown>;
 /**
  * Returns true if obj is an Array
  *
