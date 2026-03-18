@@ -107,6 +107,14 @@ export const Utils = {
   isObject: isObject,
 
   /**
+   * Returns true if the prototype of obj is a Record
+   *
+   * @param {any} obj
+   * @returns {boolean}
+   */
+  isRecord: isRecord,
+
+  /**
    * Returns true if obj is an Array
    *
    * @param {any} obj
@@ -527,6 +535,16 @@ function isBool(obj: any): obj is boolean {
  */
 function isObject(obj: any): obj is object {
   return toType(obj) === 'object'
+}
+
+/**
+ * Returns true if the prototype of obj is a Record
+ *
+ * @param {any} obj
+ * @returns {boolean}
+ */
+function isRecord(obj: any): obj is Record<string, unknown> {
+  return toType(obj) === 'object' && Object.getOwnPropertyNames(obj).length > 0
 }
 
 /**
@@ -1056,11 +1074,11 @@ function cfGetKey(obj: Object | undefined, path: validKeyTypes | validKeyTypeArr
     let foundKeys: validKeyTypeArray = []
 
     keyParts.map(k => {
-      if (isObject(childObj)) {
+      if (isRecord(childObj)) {
         let childKey = cfGetKey(childObj, k)
         if (typeof childKey !== 'undefined') {
           foundKeys.push(childKey)
-          childObj = childObj[childKey]
+          childObj = childObj[childKey] as Object
         } else {
           childObj = undefined
         }

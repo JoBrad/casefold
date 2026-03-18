@@ -89,6 +89,21 @@ describe('casefold module => ', () => {
     expect(Utils).to.not.be.undefined
   })
 
+  it('Should accept an object or a record', () => {
+    let testObj = {'foo': 'bar'}
+    if (Utils.isRecord(testObj)) {
+      expect(caseFold.get(testObj, 'foo')).to.equal('bar')
+      expect(caseFold.getKey(testObj, 'FOO')).to.equal('foo')
+      expect(caseFold.has(testObj, 'FOO')).to.equal(true)
+    }
+    if (Utils.isObject(testObj)) {
+      expect(caseFold.get(testObj, 'foo')).to.equal('bar')
+      expect(caseFold.getKey(testObj, 'FOO')).to.equal('foo')
+      expect(caseFold.has(testObj, 'FOO')).to.equal(true)
+    }
+  })
+
+
   describe('caseFold', () => {
     describe('(root object)', () => {
       it('Should be a function', () => {
